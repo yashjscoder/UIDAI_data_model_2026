@@ -161,3 +161,51 @@ with tab2:
 
 
 
+
+    st.divider()
+    
+    st.subheader("📈 Digital Migration Signal")
+    st.write("""
+        This dual-axis chart compares **Address/Demographic** updates (blue) with **Biometric** updates (orange).
+        - **Divergence:** If Address updates rise while Biometrics stay flat, it indicates high regional mobility (people moving for jobs/education).
+        - **Convergence:** Shows standard identity maintenance cycles.
+    """)
+    
+    # Use st.plotly_chart for the interactive Plotly figure
+    fig_migration = viz.get_migration_signal(main_df)
+    st.plotly_chart(fig_migration, use_container_width=True)
+    
+    st.info("💡 **Strategy:** High 'Blue Line' areas are candidates for enhanced digital self-service kiosks.")
+
+
+
+with tab3:
+    st.header("🌊 Operational Stress & Infrastructure Health")
+    
+    st.write("""
+        This tab analyzes the **resilience** of the UIDAI ecosystem. 
+        We look at how stable the centers are and identify regions where the infrastructure 
+        is under 'Stress' due to high demand but low persistence.
+    """)
+    
+    # Visual: Pincode Stability
+    st.subheader("1. Center Persistence Analysis")
+    fig_stability = viz.get_pincode_stability(main_df)
+    st.pyplot(fig_stability)
+    
+    st.warning("💡 **Operational Insight:** Regions with a high count of low-persistence pincodes (left side) are likely being served by mobile vans or temporary camps.")
+#############################
+    
+    st.divider()
+    
+    st.subheader("2. Temporal Stress: Peak Demand Windows")
+    st.write("""
+        This heatmap identifies **when** the system is under the most pressure. 
+        Darker cells indicate periods where server bandwidth and staff availability 
+        should be at their maximum.
+    """)
+    
+    fig_heatmap = viz.get_operational_heatmap(main_df)
+    st.pyplot(fig_heatmap)
+    
+    st.info("🎯 **Recommendation:** Use this data to schedule system maintenance during light-colored windows (low load) to minimize citizen impact.")

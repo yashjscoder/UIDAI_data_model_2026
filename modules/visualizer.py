@@ -4,6 +4,7 @@ import streamlit as st
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
+import plotly.graph_objects as go
 
 def get_raw_data_summary():
     """Logic to scan the directory and return summaries of all CSVs found."""
@@ -355,5 +356,151 @@ def get_update_dna(df, context_name):
         ax.text(i + width/2, bio_val, f'{(bio_val/total)*100:.0f}%', ha='center', va='bottom', fontweight='bold')
 
     plt.grid(axis='y', linestyle='--', alpha=0.3)
+    plt.tight_layout()
+    return fig
+
+
+
+
+
+def get_migration_signal(df):
+    # 1. Self-Healing Column Mapping
+    demo_cols = [c for c in df.columns if 'demo' in c.lower()]
+    bio_cols = [c for c in df.columns if 'bio' in c.lower()]
+
+    # 2. Prepare Time-Series Data
+    migration_signal = df.groupby('date').agg({
+        **{col: 'sum' for col in demo_cols},
+        **{col: 'sum' for col in bio_cols}
+    }).reset_index()
+
+    migration_signal['address_signal'] = migration_signal[demo_cols].sum(axis=1)
+    migration_signal['biometric_signal'] = migration_signal[bio_cols].sum(axis=1)
+    migration_signal = migration_signal.sort_values('date')
+
+    # 3. Create the Figure
+    fig = go.Figure()
+
+    # 4. Add Address Signal (Left Axis)
+    fig.add_trace(go.Scatter(
+        x=migration_signal['date'],
+        y=migration_signal['address_signal'],
+        name="Demographic/Address (Mobility)",
+        line=dict(color='#3498db', width=4),
+        yaxis="y1"
+    ))
+
+    # 5. Add Biometric Signal (Right Axis)
+    fig.add_trace(go.Scatter(
+        x=migration_signal['date'],
+        y=migration_signal['biometric_signal'],
+        name="Biometric (Identity Maintenance)",
+        line=dict(color='#e67e22', width=4, dash='dash'),
+        yaxis="y2"
+    ))
+
+    # 6. Create Dual-Axis Layout
+    fig.update_layout(
+        title="📈 Digital Migration Signal: Mobility vs. Maintenance",
+        xaxis=dict(title="Timeline"),
+        yaxis=dict(
+            title="Address/Demo Updates",
+            titlefont=dict(color="#3498db"),
+            tickfont=dict(color="#3498db")
+        ),
+        yaxis2=dict(
+            title="Biometric Updates",
+            titlefont=dict(color="#e67e22"),
+            tickfont=dict(color="#e67e22"),
+            anchor="x",
+            overlaying="y",
+            side="right"
+        ),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        template="plotly_white",
+        hovermode="x unified",
+        height=500
+    )
+
+    return fig
+
+
+
+
+
+def get_pincode_stability(df):
+    # 1. Prepare Data: Unique pincodes only
+    pincode_stability = df[['pincode', 'pincode_persistence']].drop_duplicates()
+
+    # 2. Set Plot Style
+    fig, ax = plt.subplots(figsize=(12, 7))
+    sns.set_theme(style="white")
+
+    # 3. Create the Histogram
+    sns.histplot(
+        data=pincode_stability, 
+        x='pincode_persistence', 
+        bins=20, 
+        kde=True, 
+        color='#6a0dad', 
+        edgecolor='white',
+        alpha=0.7,
+        ax=ax
+    )
+
+    # 4. Add "Strategic Threshold" Line
+    median_val = pincode_stability['pincode_persistence'].median()
+    ax.axvline(median_val, color='red', linestyle='--', label=f'Median Persistence: {median_val:.1f} days')
+
+    # 5. Styling
+    ax.set_title("📍 Infrastructure Stability: Center Persistence", fontsize=18, fontweight='bold', pad=20)
+    ax.set_xlabel("Number of Active Days (Persistence)", fontsize=12)
+    ax.set_ylabel("Count of Unique Pincodes", fontsize=12)
+
+    # Explanation box
+    ax.text(0.95, 0.85, 
+             "SPIKE AT LOW DAYS:\nHigh reliance on temporary kits.\n\nLONG TAIL:\nPermanent infrastructure.", 
+             transform=ax.transAxes, verticalalignment='top', horizontalalignment='right',
+             bbox=dict(facecolor='white', alpha=0.5, edgecolor='gray'), fontsize=10)
+
+    ax.legend()
+    plt.tight_layout()
+    
+    return fig
+
+
+def get_operational_heatmap(df):
+    # 1. Prepare the Data
+    days_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    # Ensure Month order is chronological
+    month_order = ['January', 'February', 'March', 'April', 'May', 'June', 
+                   'July', 'August', 'September', 'October', 'November', 'December']
+    
+    # Filter only the months present in the data to avoid empty rows
+    existing_months = [m for m in month_order if m in df['month'].unique()]
+
+    # Create pivot table
+    heatmap_data = df.groupby(['month', 'day_name'])['total_updates'].sum().unstack()
+    
+    # Reorder Rows and Columns
+    heatmap_data = heatmap_data.reindex(index=existing_months, columns=days_order)
+
+    # 2. Plotting
+    fig, ax = plt.subplots(figsize=(14, 8))
+    sns.heatmap(
+        heatmap_data, 
+        annot=False, 
+        fmt=".0f", 
+        cmap="YlGnBu", 
+        linewidths=.5,
+        cbar_kws={'label': 'Total Update Volume'},
+        ax=ax
+    )
+
+    # 3. Styling
+    ax.set_title("🗓️ Weekly Operational Load: Peak Demand Windows", fontsize=18, fontweight='bold', pad=20)
+    ax.set_xlabel("Day of the Week", fontsize=12)
+    ax.set_ylabel("Month", fontsize=12)
+
     plt.tight_layout()
     return fig
