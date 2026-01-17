@@ -3,6 +3,7 @@ import os
 import streamlit as st
 import seaborn as sns
 import matplotlib.pyplot as plt
+import numpy as np
 
 def get_raw_data_summary():
     """Logic to scan the directory and return summaries of all CSVs found."""
@@ -88,3 +89,271 @@ def get_localized_demand(df):
         ax.tick_params(axis='y', labelsize=10)
         
     return g.fig # Ensure this is also indented!
+
+
+def get_service_split(df, context_name):
+    # 1. Aggregate Totals
+    national_data = pd.DataFrame({
+        'Category': ['New Enrolments', 'Information Updates'],
+        'Volume': [df['total_enrolment'].sum(), df['total_updates'].sum()]
+    })
+
+    # 2. Plotting
+    fig, ax = plt.subplots(figsize=(8, 10))
+    bottom = 0
+    colors = ['#1f77b4', '#ff7f0e'] 
+
+    for i, row in national_data.iterrows():
+        ax.bar(context_name, row['Volume'], bottom=bottom, label=row['Category'], color=colors[i], width=0.5)
+        ax.text(context_name, bottom + row['Volume']/2, 
+                 f"{row['Category']}\n({(row['Volume']/max(1, national_data['Volume'].sum()))*100:.1f}%)", 
+                 ha='center', va='center', color='white', fontweight='bold', fontsize=12)
+        bottom += row['Volume']
+
+    ax.set_title(f"📊 {context_name} Service Split: Enrolment vs Maintenance", fontsize=16, fontweight='bold')
+    ax.set_ylabel("Total Volume")
+    ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    return fig
+
+def get_state_service_split(df):
+    state_split = df.groupby('state')[['total_enrolment', 'total_updates']].sum().reset_index()
+    state_split['total'] = state_split['total_enrolment'] + state_split['total_updates']
+    state_split = state_split.sort_values('total', ascending=False).head(20) # Showing top 20 for clarity
+
+    fig, ax = plt.subplots(figsize=(16, 10))
+    ax.bar(state_split['state'], state_split['total_enrolment'], label='New Enrolments', color='#1f77b4')
+    ax.bar(state_split['state'], state_split['total_updates'], bottom=state_split['total_enrolment'], 
+            label='Information Updates', color='#ff7f0e')
+
+    ax.set_title("🗺️ State-wise Operations: Onboarding vs. Maintenance", fontsize=20, fontweight='bold')
+    plt.xticks(rotation=90)
+    ax.legend()
+    plt.tight_layout()
+    return fig
+
+def get_strategic_districts(df):
+    district_stats = df.groupby(['state', 'district']).agg({
+        'total_enrolment': 'sum',
+        'total_updates': 'sum'
+    }).reset_index()
+
+    district_stats['deviation_from_state'] = district_stats['total_updates'] - district_stats.groupby('state')['total_updates'].transform('mean')
+
+    high_pressure = district_stats.nlargest(7, 'total_updates').copy()
+    high_pressure['Category'] = '🔴 High-Pressure'
+    anomalous = district_stats.nlargest(7, 'deviation_from_state').copy()
+    anomalous['Category'] = '🟡 Anomalous'
+    low_engagement = district_stats[district_stats['total_updates'] > 10].nsmallest(7, 'total_updates').copy()
+    low_engagement['Category'] = '🟢 Low-Engagement'
+
+    strategic_districts = pd.concat([high_pressure, anomalous, low_engagement])
+    strategic_districts['label'] = strategic_districts['district'] + "\n(" + strategic_districts['state'] + ")"
+
+    fig, ax = plt.subplots(figsize=(16, 8))
+    sns.barplot(data=strategic_districts, x='label', y='total_updates', hue='Category', palette=['red', 'gold', 'green'], ax=ax)
+    plt.xticks(rotation=45, ha='right')
+    ax.set_title("🎯 Targeted Intervention Districts", fontsize=18, fontweight='bold')
+    plt.tight_layout()
+    return fig
+
+
+
+def get_service_timeseries(df, context_name):
+    # 1. Prepare Data
+    # Ensure date is datetime (already done in load_data but safe to have here)
+    df['date'] = pd.to_datetime(df['date'])
+    daily_load = df.groupby('date')[['total_enrolment', 'total_updates']].sum().reset_index()
+
+    # 2. Plotting
+    fig, ax = plt.subplots(figsize=(16, 7))
+    sns.set_theme(style="whitegrid")
+
+    # Enrolment
+    sns.lineplot(data=daily_load, x='date', y='total_enrolment', 
+                 label='Daily New Enrolments', color='#1f77b4', lw=2.5, marker='o', markersize=4, ax=ax)
+
+    # Updates
+    sns.lineplot(data=daily_load, x='date', y='total_updates', 
+                 label='Daily Information Updates', color='#ff7f0e', lw=2.5, marker='s', markersize=4, ax=ax)
+
+    # 3. Styling
+    ax.set_title(f"📈 {context_name} System Heartbeat: Daily Service Volume", fontsize=20, fontweight='bold', pad=20)
+    ax.set_xlabel("Timeline", fontsize=12)
+    ax.set_ylabel("Total Count (Log Scale)", fontsize=12)
+    
+    # Log scale handles the massive gap between high update volumes and low enrolment volumes
+    ax.set_yscale('log') 
+
+    ax.legend(fontsize=12)
+    plt.tight_layout()
+    
+    return fig
+
+
+
+
+
+def get_saturation_curve(df, context_name):
+    # 1. Prepare Cumulative Data
+    df['date'] = pd.to_datetime(df['date'])
+    daily_totals = df.groupby('date')[['total_enrolment', 'total_updates']].sum().sort_index()
+
+    # Calculate Running Totals (Cumulative Sum)
+    daily_totals['cum_enrolment'] = daily_totals['total_enrolment'].cumsum()
+    daily_totals['cum_updates'] = daily_totals['total_updates'].cumsum()
+
+    # 2. Plotting
+    fig, ax = plt.subplots(figsize=(14, 8))
+
+    # Area Chart look
+    ax.fill_between(daily_totals.index, daily_totals['cum_updates'], color='orange', alpha=0.3, label='Cumulative Updates')
+    ax.plot(daily_totals.index, daily_totals['cum_updates'], color='darkorange', lw=3)
+
+    ax.fill_between(daily_totals.index, daily_totals['cum_enrolment'], color='teal', alpha=0.5, label='Cumulative Enrolments')
+    ax.plot(daily_totals.index, daily_totals['cum_enrolment'], color='teal', lw=3)
+
+    # 3. Styling
+    ax.set_title(f"📈 {context_name} Saturation Curve: Cumulative Service Delivery", fontsize=18, fontweight='bold', pad=20)
+    ax.set_xlabel("Timeline", fontsize=13)
+    ax.set_ylabel("Total Volume (Cumulative)", fontsize=13)
+
+    # Add Current Total Annotations
+    final_enrol = daily_totals['cum_enrolment'].iloc[-1]
+    final_update = daily_totals['cum_updates'].iloc[-1]
+
+    ax.annotate(f'Total Enrolments: {final_enrol:,.0f}', 
+                 xy=(daily_totals.index[-1], final_enrol), xytext=(-150, 20),
+                 textcoords='offset points', arrowprops=dict(arrowstyle='->', color='teal'),
+                 fontsize=12, fontweight='bold', color='teal')
+
+    ax.annotate(f'Total Updates: {final_update:,.0f}', 
+                 xy=(daily_totals.index[-1], final_update), xytext=(-150, -40),
+                 textcoords='offset points', arrowprops=dict(arrowstyle='->', color='darkorange'),
+                 fontsize=12, fontweight='bold', color='darkorange')
+
+    ax.legend(loc='upper left', fontsize=12)
+    ax.grid(axis='y', alpha=0.3)
+    plt.tight_layout()
+
+    return fig
+
+def get_demographic_mix(df):
+    # 1. Calculate Absolute Mix
+    age_cols = ['age_0_5', 'age_5_17', 'age_18_greater']
+    mix_data = df[age_cols].sum()
+    
+    # 2. Calculate "Hidden" Adult Activity (Updates)
+    adult_updates = df['demo_age_17_'].sum() + df['bio_age_17_'].sum()
+    
+    # 3. Create Donut Chart
+    fig, ax = plt.subplots(figsize=(8, 8))
+    colors = ['#ff9999','#66b3ff','#99ff99']
+    
+    # Simple logic to prevent crash if data is 0
+    if mix_data.sum() > 0:
+        wedges, texts, autotexts = ax.pie(
+            mix_data, 
+            labels=['0-5 yrs', '5-17 yrs', '18+ yrs'], 
+            autopct='%1.1f%%', 
+            startangle=140, 
+            colors=colors, 
+            pctdistance=0.85,
+            textprops={'fontweight': 'bold'}
+        )
+        
+        # Draw white circle in middle for "Donut" effect
+        centre_circle = plt.Circle((0,0), 0.70, fc='white')
+        fig.gca().add_artist(centre_circle)
+    
+    ax.set_title("👥 Age-Wise Enrolment Mix", fontsize=16, fontweight='bold')
+    
+    # We return both the figure and the "Hidden" stat to show in Streamlit metrics
+    return fig, mix_data, adult_updates
+
+
+
+def get_compliance_violin(df, state_filter):
+    # 1. Logic: If "National", show top 10 gaps. If "State", show that state specifically.
+    if state_filter == "National Overview":
+        top_gap_states = df.groupby('state')['compliance_gap'].sum().nlargest(10).index
+        violin_df = df[df['state'].isin(top_gap_states)]
+    else:
+        violin_df = df # Already filtered by main_df in app.py
+
+    # 2. Plotting
+    fig, ax = plt.subplots(figsize=(16, 10))
+    sns.set_theme(style="whitegrid")
+
+    sns.violinplot(
+        data=violin_df, 
+        x='state', 
+        y='compliance_gap', 
+        hue='state',
+        palette="muted",
+        inner="quartile",
+        bw_adjust=0.5,
+        legend=False,
+        ax=ax
+    )
+
+    # 3. Add Reference Line
+    ax.axhline(0, color='red', linestyle='--', alpha=0.6, label='Full Compliance')
+
+    # 4. Styling
+    ax.set_title(f"Student Compliance Gap (Ages 5-17): {state_filter}", fontsize=20, fontweight='bold', pad=25)
+    ax.set_xlabel("State", fontsize=14)
+    ax.set_ylabel("Compliance Gap (Estimated Missing)", fontsize=14)
+    plt.xticks(rotation=45, ha='right')
+    
+    # Annotation
+    ax.annotate('WIDE BULGE: Problem is state-wide\nLONG THIN TAIL: Problem is localized', 
+                 xy=(0.02, 0.92), xycoords='axes fraction', fontsize=12, fontweight='bold',
+                 bbox=dict(boxstyle="round,pad=0.5", fc="white", ec="black", alpha=0.8))
+
+    plt.tight_layout()
+    return fig
+
+
+
+    import numpy as np
+
+def get_update_dna(df, context_name):
+    # 1. Determine grouping level (State if National, District if State selected)
+    group_col = 'state' if context_name == "National Overview" else 'district'
+    
+    # 2. Prepare Data
+    update_type_df = df.groupby(group_col).agg({
+        'demo_age_17_': 'sum',
+        'bio_age_17_': 'sum'
+    }).reset_index()
+
+    update_type_df['total'] = update_type_df['demo_age_17_'] + update_type_df['bio_age_17_']
+    update_type_df = update_type_df.sort_values('total', ascending=False).head(10)
+
+    # 3. Setup Plot
+    x = np.arange(len(update_type_df[group_col]))
+    width = 0.35
+    fig, ax = plt.subplots(figsize=(15, 8))
+
+    rects1 = ax.bar(x - width/2, update_type_df['demo_age_17_'], width, label='Demographic (Text)', color='#3498db')
+    rects2 = ax.bar(x + width/2, update_type_df['bio_age_17_'], width, label='Biometric (Physical)', color='#e74c3c')
+
+    # 4. Labels & Styling
+    ax.set_ylabel('Total Updates')
+    ax.set_title(f'🧬 Update DNA: {context_name} (Top 10)', fontsize=20, fontweight='bold', pad=25)
+    ax.set_xticks(x)
+    ax.set_xticklabels(update_type_df[group_col], rotation=45, ha='right')
+    ax.legend()
+
+    # 5. Add % Annotations
+    for i in range(len(update_type_df)):
+        total = max(1, update_type_df['total'].iloc[i])
+        demo_val = update_type_df['demo_age_17_'].iloc[i]
+        bio_val = update_type_df['bio_age_17_'].iloc[i]
+        
+        ax.text(i - width/2, demo_val, f'{(demo_val/total)*100:.0f}%', ha='center', va='bottom', fontweight='bold')
+        ax.text(i + width/2, bio_val, f'{(bio_val/total)*100:.0f}%', ha='center', va='bottom', fontweight='bold')
+
+    plt.grid(axis='y', linestyle='--', alpha=0.3)
+    plt.tight_layout()
+    return fig
