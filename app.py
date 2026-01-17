@@ -350,7 +350,7 @@ with tab4:
     """)
     
     fig_risk = viz.get_district_risk_scatter(main_df)
-    st.plotly_chart(fig_risk, use_container_width=True)
+    st.plotly_chart(fig_risk, use_container_width=True, key="risk_bubble_chart_unique")
     
     st.info("""
         **How to prioritize:** - **Upper-Right (Red):** Critical need for permanent centers and massive enrolment camps.
