@@ -357,3 +357,25 @@ with tab4:
         - **Upper-Left:** High missing population, but infrastructure is underutilized (Needs awareness camps).
         - **Lower-Right:** System is very busy with updates, but enrolment is complete (Needs more update kiosks).
     """)
+
+
+
+    
+    # ... (previous visuals) ...
+
+    st.divider()
+
+    st.subheader("5. The Goldilocks Frontier (Operational Efficiency)")
+    st.write("""
+        This 2D Density Map identifies the **Efficiency Frontier**. 
+        We are looking for centers that move out of 'Fragile Hotspots' and 'Dormant' zones 
+        into the green dashed 'Goldilocks' zone.
+    """)
+    
+    fig_frontier = viz.get_frontier_density_map(main_df)
+    st.pyplot(fig_frontier)
+    
+    st.success("""
+        **Strategic Mission:** Move resources from 'Dormant' centers (bottom right) 
+        to reinforce 'Fragile Hotspots' (top left) to achieve a balanced national ecosystem.
+    """)

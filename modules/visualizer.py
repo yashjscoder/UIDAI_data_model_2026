@@ -837,3 +837,68 @@ def get_district_risk_scatter(df):
     fig.update_layout(template="plotly_white", height=600, margin=dict(t=80))
     
     return fig
+
+
+
+
+def get_frontier_density_map(df):
+    # 1. Prepare Center-Level Metrics
+    center_stats = df.groupby(['pincode', 'state']).agg({
+        'pincode_persistence': 'mean', 
+        'total_updates': 'sum'
+    }).reset_index()
+
+    center_stats['engagement_intensity'] = center_stats['total_updates'] / (center_stats['pincode_persistence'] + 1)
+    center_stats['log_intensity'] = np.log10(center_stats['engagement_intensity'] + 1)
+
+    # 2. Setup the Plot
+    fig, ax = plt.subplots(figsize=(12, 10))
+    sns.set_theme(style="white")
+
+    # 3. Create the 2D KDE Contour
+    sns.kdeplot(
+        data=center_stats,
+        x="pincode_persistence",
+        y="log_intensity",
+        fill=True,
+        thresh=0.01, 
+        levels=15,
+        cmap="mako",
+        alpha=0.75,
+        ax=ax
+    )
+
+    # 4. Underlay Scatter
+    ax.scatter(center_stats['pincode_persistence'], center_stats['log_intensity'], 
+                color='white', s=8, alpha=0.15)
+
+    # 5. Strategic Labels
+    ax.text(5, 4.3, "FRAGILE HOTSPOTS\n(High Surge, Low Stability)", 
+             color='#e74c3c', fontweight='bold', fontsize=10, 
+             bbox=dict(facecolor='white', alpha=0.6, edgecolor='none'))
+
+    ax.text(95, 0.4, "DORMANT CENTERS\n(Stable but Idle)", 
+             color='#34495e', fontweight='bold', fontsize=10, 
+             bbox=dict(facecolor='white', alpha=0.6, edgecolor='none'))
+
+    # 6. The Goldilocks Frontier Box
+    # Adjusting coordinates based on dataset typical ranges
+    x_min_gold, x_max_gold = 85, 110  
+    y_min_gold, y_max_gold = 1.3, 2.7 
+    rect = plt.Rectangle((x_min_gold, y_min_gold), x_max_gold-x_min_gold, y_max_gold-y_min_gold, 
+                          fill=False, color='#2ecc71', linestyle='--', linewidth=3)
+    ax.add_patch(rect)
+    ax.text(x_min_gold, y_max_gold + 0.1, "GOLDILOCKS FRONTIER", 
+             color='#27ae60', fontweight='bold', fontsize=12)
+
+    # 7. Final Polish
+    ax.set_title("Frontier Density Map: Center Optimization", fontsize=22, fontweight='bold', pad=30)
+    ax.set_xlabel("Persistence (Days Active)", fontsize=14, fontweight='bold')
+    ax.set_ylabel("Intensity (Log Scale)", fontsize=14, fontweight='bold')
+    
+    ax.set_yticks([1, 2, 3, 4, 5])
+    ax.set_yticklabels(["10", "100", "1K", "10K", "100K"])
+    ax.grid(color='gray', linestyle=':', alpha=0.2)
+
+    plt.tight_layout()
+    return fig
