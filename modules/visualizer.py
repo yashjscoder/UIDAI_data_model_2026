@@ -59,9 +59,9 @@ def get_state_leaderboard(df):
     plt.tight_layout()
     
     return fig
-# Line 60
+
 def get_localized_demand(df):
-    # Everything below this must be shifted right!
+    # 1. Prepare Data
     state_totals = df.groupby('state')['total_enrolment'].sum()
     top_n_states = state_totals.nlargest(10).index
 
@@ -71,26 +71,33 @@ def get_localized_demand(df):
     dist_data = dist_data.sort_values(['state', 'total_enrolment'], ascending=[True, False])
     dist_data = dist_data.groupby('state').head(10)
 
+    # 2. Setup FacetGrid
     sns.set_theme(style="whitegrid")
-    
     n_states = len(dist_data['state'].unique())
     cols = 3 if n_states <= 3 else 5
     
     g = sns.FacetGrid(dist_data, col="state", col_wrap=cols, sharey=False, sharex=False, 
                       height=4, aspect=1.2, hue="state", palette="husl")
 
+    # 3. Map Barplot
     g.map(sns.barplot, "total_enrolment", "district", order=None)
 
+    # 4. Formatting and Title Fix
     g.set_titles("{col_name}", size=14, fontweight='bold')
     g.set_axis_labels("Total Enrolment", "")
-    plt.subplots_adjust(top=0.9)
-    g.fig.suptitle("📍 Localized Demand: Top 10 Districts per State", fontsize=22, fontweight='bold')
+    
+    # FIX: Increase y to 1.05 and use tight_layout rect to prevent the "cut line"
+    g.fig.suptitle("📍 Localized Demand: Top 10 Districts per State", 
+                   fontsize=22, fontweight='bold', y=1.05) 
 
     for ax in g.axes.flat:
         ax.tick_params(axis='x', labelsize=9)
         ax.tick_params(axis='y', labelsize=10)
+    
+    # This ensures the charts don't overlap the title or get cut at the edges
+    g.fig.tight_layout(rect=[0, 0, 1, 0.95]) 
         
-    return g.fig # Ensure this is also indented!
+    return g.fig
 
 
 def get_service_split(df, context_name):
@@ -184,7 +191,7 @@ def get_service_timeseries(df, context_name):
     ax.set_ylabel("Total Count (Log Scale)", fontsize=12)
     
     # Log scale handles the massive gap between high update volumes and low enrolment volumes
-    ax.set_yscale('log') 
+    ax.set_yscale('symlog', linthresh=1) # Handles zero values gracefully
 
     ax.legend(fontsize=12)
     plt.tight_layout()
@@ -317,8 +324,6 @@ def get_compliance_violin(df, state_filter):
 
 
 
-    import numpy as np
-
 def get_update_dna(df, context_name):
     # 1. Determine grouping level (State if National, District if State selected)
     group_col = 'state' if context_name == "National Overview" else 'district'
@@ -362,8 +367,6 @@ def get_update_dna(df, context_name):
 
 
 
-
-
 def get_migration_signal(df):
     # 1. Self-Healing Column Mapping
     demo_cols = [c for c in df.columns if 'demo' in c.lower()]
@@ -402,16 +405,23 @@ def get_migration_signal(df):
 
     # 6. Create Dual-Axis Layout
     fig.update_layout(
-        title="📈 Digital Migration Signal: Mobility vs. Maintenance",
-        xaxis=dict(title="Timeline"),
+        title=dict(
+            text="📈 Digital Migration Signal: Mobility vs. Maintenance",
+            font=dict(size=18, color='#2c3e50')
+        ),
+        xaxis=dict(title=dict(text="Timeline")), # Updated structure
         yaxis=dict(
-            title="Address/Demo Updates",
-            titlefont=dict(color="#3498db"),
+            title=dict(
+                text="Address/Demo Updates",
+                font=dict(color="#3498db") # Replaces titlefont
+            ),
             tickfont=dict(color="#3498db")
         ),
         yaxis2=dict(
-            title="Biometric Updates",
-            titlefont=dict(color="#e67e22"),
+            title=dict(
+                text="Biometric Updates",
+                font=dict(color="#e67e22") # Replaces titlefont
+            ),
             tickfont=dict(color="#e67e22"),
             anchor="x",
             overlaying="y",
@@ -424,10 +434,6 @@ def get_migration_signal(df):
     )
 
     return fig
-
-
-
-
 
 def get_pincode_stability(df):
     # 1. Prepare Data: Unique pincodes only
@@ -471,20 +477,41 @@ def get_pincode_stability(df):
 
 
 def get_operational_heatmap(df):
+    # --- 0. SAFETY CHECK ---
+    # Check if the dataframe is empty or missing the required columns
+    if df.empty or 'month' not in df.columns or 'day_name' not in df.columns:
+        fig, ax = plt.subplots(figsize=(14, 8))
+        ax.text(0.5, 0.5, "No data available for the selected filters", 
+                ha='center', va='center', fontsize=14)
+        return fig
+
     # 1. Prepare the Data
     days_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-    # Ensure Month order is chronological
     month_order = ['January', 'February', 'March', 'April', 'May', 'June', 
                    'July', 'August', 'September', 'October', 'November', 'December']
     
-    # Filter only the months present in the data to avoid empty rows
+    # Filter only the months present to avoid empty rows
     existing_months = [m for m in month_order if m in df['month'].unique()]
 
     # Create pivot table
-    heatmap_data = df.groupby(['month', 'day_name'])['total_updates'].sum().unstack()
+    heatmap_data = df.groupby(['month', 'day_name'])['total_updates'].sum().unstack().fillna(0)
     
     # Reorder Rows and Columns
-    heatmap_data = heatmap_data.reindex(index=existing_months, columns=days_order)
+    heatmap_data = heatmap_data.reindex(index=existing_months, columns=days_order).fillna(0)
+
+    # --- 1.5 FINAL DATA CHECK (Crucial Fix) ---
+    # We check if the table is empty BEFORE calling .max()
+    if heatmap_data.empty or (heatmap_data.values.size > 0 and heatmap_data.values.max() == 0):
+        fig, ax = plt.subplots(figsize=(14, 8))
+        ax.text(0.5, 0.5, "Data found, but update volumes are zero for this selection", 
+                ha='center', va='center', fontsize=14)
+        return fig
+    elif heatmap_data.values.size == 0:
+        # Extra safety for zero-size arrays
+        fig, ax = plt.subplots(figsize=(14, 8))
+        ax.text(0.5, 0.5, "Insufficient data to generate heatmap", 
+                ha='center', va='center', fontsize=14)
+        return fig
 
     # 2. Plotting
     fig, ax = plt.subplots(figsize=(14, 8))
@@ -505,8 +532,6 @@ def get_operational_heatmap(df):
 
     plt.tight_layout()
     return fig
-
-
 
 
 def get_efficiency_boxplot(df):
@@ -698,36 +723,6 @@ def get_priority_treemap(df):
     
     return fig
 
-
-
-
-def get_risk_bubble_chart(df):
-    # 1. Aggregate data at the District level
-    district_risk = df.groupby(['state', 'district']).agg({
-        'infra_stress_score': 'mean',
-        'compliance_gap': 'mean',
-        'total_updates': 'sum'
-    }).reset_index()
-
-    # 2. Filter out zero-value districts
-    district_risk = district_risk[district_risk['total_updates'] > 0]
-
-    # 3. Create the Bubble Chart
-    fig = px.scatter(
-        district_risk,
-        x='infra_stress_score',
-        y='compliance_gap',
-        size='total_updates',
-        color='state', 
-        hover_name='district',
-        size_max=60,
-        title="🚨 District Risk Matrix: Stress vs. Compliance Gap",
-        labels={
-            'infra_stress_score': 'Infrastructure Stress',
-            'compliance_gap': 'Compliance Gap',
-            'total_updates': 'Total Volume'
-        }
-    )
 
     # 4. Add Quadrant Lines
     stress_median = district_risk['infra_stress_score'].median()

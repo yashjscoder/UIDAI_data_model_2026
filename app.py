@@ -304,7 +304,7 @@ with tab4:
         and the citizen gap is widest.
     """)
     
-    fig_risk = viz.get_risk_bubble_chart(main_df)
+    fig_risk = viz.get_district_risk_scatter(main_df)
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.warning("""
