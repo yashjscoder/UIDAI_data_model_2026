@@ -379,3 +379,25 @@ with tab4:
         **Strategic Mission:** Move resources from 'Dormant' centers (bottom right) 
         to reinforce 'Fragile Hotspots' (top left) to achieve a balanced national ecosystem.
     """)
+
+
+
+    # ... (all previous Strategy visuals) ...
+
+    st.divider()
+
+    st.subheader("6. The Aadhaar Lifecycle: System Flow Analysis")
+    st.write("""
+        This Sankey diagram visualizes the **transition of the ecosystem**. 
+        As the nation reaches saturation, the flow shifts from 'New Enrolments' (Left) 
+        to 'Maintenance & Updates' (Right).
+    """)
+    
+    fig_sankey = viz.get_system_flow_sankey(main_df)
+    st.plotly_chart(fig_sankey, use_container_width=True)
+    
+    st.success("""
+        **Final Strategic Insight:** The future of UIDAI is no longer about 
+        onboarding—it's about managing the flow of 'Mandatory Cycles' and 
+        streamlining 'Voluntary Corrections' through digital channels.
+    """)

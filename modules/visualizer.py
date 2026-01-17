@@ -902,3 +902,49 @@ def get_frontier_density_map(df):
 
     plt.tight_layout()
     return fig
+
+
+
+import plotly.graph_objects as go
+
+def get_system_flow_sankey(df):
+    # 1. Prepare the Buckets
+    demographic_updates = df[[c for c in df.columns if 'demo' in c.lower()]].sum().sum()
+    biometric_updates = df[[c for c in df.columns if 'bio' in c.lower()]].sum().sum()
+    
+    # Logic for flow distribution
+    label = ["New Enrolments", "Demographic Updates", "Biometric Updates", "Mandatory Cycles", "Voluntary Corrections"]
+    source = [0, 0, 1, 1, 2, 2] 
+    target = [1, 2, 3, 4, 3, 4] 
+    value  = [
+        demographic_updates * 0.4, 
+        biometric_updates * 0.4,   
+        demographic_updates * 0.2, 
+        demographic_updates * 0.8, 
+        biometric_updates * 0.6,   
+        biometric_updates * 0.4    
+    ]
+
+    # 2. Create the Figure
+    fig = go.Figure(data=[go.Sankey(
+        node = dict(
+          pad = 15,
+          thickness = 20,
+          line = dict(color = "black", width = 0.5),
+          label = label,
+          color = ["#2ecc71", "#3498db", "#e67e22", "#e74c3c", "#9b59b6"]
+        ),
+        link = dict(
+          source = source,
+          target = target,
+          value = value,
+          color = "rgba(200, 200, 200, 0.4)"
+      ))])
+
+    fig.update_layout(
+        title_text="🔄 System Evolution: Service Life-Cycle Flow", 
+        font_size=12,
+        height=500
+    )
+    
+    return fig
