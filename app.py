@@ -144,3 +144,20 @@ with tab2:
 
 
 
+
+        st.divider()
+    
+    st.subheader("🧬 Update DNA: Service Type Demand")
+    st.write("""
+        This grouped analysis identifies the **Mode of Engagement**. 
+        - **High Biometric %**: Requires physical center presence (Hardware heavy).
+        - **High Demographic %**: Potential for digital/online self-service adoption.
+    """)
+    
+    fig_dna = viz.get_update_dna(main_df, state_filter)
+    st.pyplot(fig_dna)
+    
+    st.warning("⚡ **Insight:** High Biometric demand areas need more physical machines and iris scanners.")
+
+
+
