@@ -209,3 +209,151 @@ with tab3:
     st.pyplot(fig_heatmap)
     
     st.info("🎯 **Recommendation:** Use this data to schedule system maintenance during light-colored windows (low load) to minimize citizen impact.")
+
+
+
+    # ... (Keep Heatmap and Stability visuals) ...
+    
+    st.divider()
+    
+    st.subheader("3. Workflow Consistency: Efficiency Benchmarking")
+    st.write("""
+        This boxplot measures the **quality of operations**. 
+        - **Short boxes** indicate that all districts in that state perform similarly (Stable).
+        - **Tall boxes** indicate a massive gap between the best and worst-performing districts (Inefficient).
+    """)
+    
+    fig_efficiency = viz.get_efficiency_boxplot(main_df)
+    st.pyplot(fig_efficiency)
+    
+    with st.expander("💡 Strategic Analysis"):
+        st.write("""
+            States appearing **above the red line** are your 'Efficiency Leaders'. 
+            States with **long vertical lines (whiskers)** have districts that are 
+            severely over-leveraged and at risk of hardware failure or staff burnout.
+        """)
+
+
+
+
+
+    # ... (Keep Heatmap and Boxplot visuals) ...
+    
+    st.divider()
+    
+    st.subheader("4. Infrastructure Stability Matrix")
+    st.write("""
+        This scatter plot maps every unique pincode into four strategic quadrants. 
+        It identifies where we need to convert temporary camps into permanent 'Aadhaar Seva Kendras'.
+    """)
+    
+    fig_matrix = viz.get_stability_matrix(main_df)
+    st.pyplot(fig_matrix)
+    
+    st.error("🚨 **Strategic Risk:** Points in the top-left quadrant represent millions of citizens relying on infrastructure that could vanish tomorrow.")
+
+
+
+   
+    
+    # Visual: Ridgeline Load
+    st.subheader("1. Seasonal Workload 'Fingerprints'")
+    with st.spinner("Calculating density distributions..."):
+        fig_ridge = viz.get_ridgeline_load(main_df)
+        st.pyplot(fig_ridge)
+    
+    st.success("""
+        **Strategic Takeaway:** - **Sharp Peaks:** Highly predictable demand. Efficient for standard staffing.
+        - **Wide Bases:** Volatile demand. Requires 'Buffer' capacity or mobile kits on standby.
+        - **Red Zones:** These days represent 'Black Swan' events that overwhelm standard infrastructure.
+    """)
+
+
+with tab4:
+    # ... (Keep the Ridgeline Load Plot here) ...
+
+    st.divider()
+
+    st.subheader("2. Strategic Priority Matrix (Treemap)")
+    st.write("""
+        This interactive treemap helps prioritize **budget allocation**.
+        - **Box Size:** Total Enrolment (The 'Impact'—how many people live there).
+        - **Box Color (Redder):** Higher Infrastructure Stress (The 'Urgency').
+    """)
+    
+    # Use plotly_chart for interactive treemaps
+    fig_tree = viz.get_priority_treemap(main_df)
+    st.plotly_chart(fig_tree, use_container_width=True)
+    
+    st.info("""
+        💡 **How to use:** Click on a State to drill down into its Districts. 
+        Large Red blocks represent districts that need immediate budget for permanent Aadhaar Seva Kendras.
+    """)
+
+
+
+
+    # ... (Keep previous visuals like Ridgeline and Treemap) ...
+
+    st.divider()
+
+    st.subheader("3. Strategic Risk Profiling")
+    st.write("""
+        This Risk Matrix correlates **Operational Stress** with the **Enrolment Gap**. 
+        Districts in the **Red Zone** are high-impact areas where demand is exceeding supply 
+        and the citizen gap is widest.
+    """)
+    
+    fig_risk = viz.get_risk_bubble_chart(main_df)
+    st.plotly_chart(fig_risk, use_container_width=True)
+    
+    st.warning("""
+        **Executive Summary:** - **X-Axis (Stress):** High values mean centers are overworked.
+        - **Y-Axis (Gap):** High values mean large numbers of 5-17 year olds are missing Aadhaar.
+        - **Bubble Size:** Represents the total workload of that district.
+    """)
+
+
+
+    
+    # ... (Previous Strategy visuals) ...
+
+    st.divider()
+
+    st.subheader("4. Ecosystem Balance: Multi-Factor Analysis")
+    st.write("""
+        The **Radar Chart** provides a balanced scorecard of the ecosystem. 
+        A larger area indicates a more mature and stable Aadhaar infrastructure.
+    """)
+    
+    # Use the filtered main_df so the radar reflects the sidebar selection
+    fig_radar = viz.get_performance_radar(main_df, state_filter)
+    st.plotly_chart(fig_radar, use_container_width=True)
+    
+    st.info("""
+        **Metric Breakdown:**
+        - **Maturity:** High volume of historical enrolments.
+        - **Digital Adoption:** High ratio of demographic updates over biometric.
+        - **Compliance:** Success in closing the 5-17 age group gap.
+    """)
+
+
+    
+    # ... (previous visuals) ...
+    
+    st.divider()
+    
+    st.subheader("3. District-Level Risk Analysis")
+    st.write("""
+        This matrix identifies districts where the system is failing both in **Efficiency** (High Stress) 
+        and **Inclusion** (High Compliance Gap). 
+    """)
+    
+    fig_risk = viz.get_district_risk_scatter(main_df)
+    st.plotly_chart(fig_risk, use_container_width=True)
+    
+    st.info("""
+        **How to prioritize:** - **Upper-Right (Red):** Critical need for permanent centers and massive enrolment camps.
+        - **Upper-Left:** High missing population, but infrastructure is underutilized (Needs awareness camps).
+        - **Lower-Right:** System is very busy with updates, but enrolment is complete (Needs more update kiosks).
+    """)

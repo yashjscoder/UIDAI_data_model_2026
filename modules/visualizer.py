@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import plotly.graph_objects as go
 
+
 def get_raw_data_summary():
     """Logic to scan the directory and return summaries of all CSVs found."""
     data_path = 'data/' if os.path.exists('data/') else './'
@@ -503,4 +504,336 @@ def get_operational_heatmap(df):
     ax.set_ylabel("Month", fontsize=12)
 
     plt.tight_layout()
+    return fig
+
+
+
+
+def get_efficiency_boxplot(df):
+    # 1. Get the Top 15 States by volume to keep the chart readable
+    top_15_states = df.groupby('state')['total_updates'].sum().nlargest(15).index
+    efficiency_df = df[df['state'].isin(top_15_states)]
+
+    # 2. Set Plotting Style
+    fig, ax = plt.subplots(figsize=(18, 10))
+    sns.set_theme(style="whitegrid")
+
+    # 3. Create the Boxplot
+    sns.boxplot(
+        data=efficiency_df, 
+        x='state', 
+        y='efficiency_score', 
+        palette="Spectral",
+        hue='state',
+        legend=False,
+        showfliers=False, # Focus on the bulk of the data
+        linewidth=1.5,
+        ax=ax
+    )
+
+    # 4. Add the National Benchmarking Line
+    national_median = df['efficiency_score'].median()
+    ax.axhline(national_median, color='red', linestyle='--', alpha=0.8, label=f'National Median: {national_median:.2f}')
+
+    # 5. Styling
+    ax.set_title("Operational Consistency: Efficiency Score Distribution", fontsize=22, fontweight='bold', pad=25)
+    ax.set_xlabel("State", fontsize=14)
+    ax.set_ylabel("Efficiency Score (Updates / Active Day)", fontsize=14)
+    plt.xticks(rotation=45, ha='right')
+    ax.legend(fontsize=12, loc='upper right')
+
+    # Annotation
+    ax.annotate('SHORT BOX = High Consistency\nTALL BOX = Uneven Workload', 
+                 xy=(0.02, 0.95), xycoords='axes fraction', fontsize=12, fontweight='bold',
+                 bbox=dict(boxstyle="round,pad=0.5", fc="white", ec="black", alpha=0.9))
+
+    plt.tight_layout()
+    return fig
+
+
+
+def get_stability_matrix(df):
+    # 1. Prepare the Data per Pincode
+    pincode_metrics = df.groupby('pincode').agg({
+        'pincode_persistence': 'first',
+        'total_enrolment': 'sum',
+        'total_updates': 'sum',
+        'state': 'first'
+    }).reset_index()
+
+    pincode_metrics['total_engagement'] = pincode_metrics['total_enrolment'] + pincode_metrics['total_updates']
+
+    # 2. Plotting
+    fig, ax = plt.subplots(figsize=(15, 10))
+    sns.set_theme(style="white")
+
+    scatter = sns.scatterplot(
+        data=pincode_metrics,
+        x='pincode_persistence',
+        y='total_engagement',
+        hue='total_engagement',
+        size='total_engagement',
+        sizes=(20, 500),
+        palette="flare",
+        alpha=0.6,
+        legend=None,
+        ax=ax
+    )
+
+    # 3. Add Strategic Quadrant Lines
+    x_med = pincode_metrics['pincode_persistence'].median()
+    y_med = pincode_metrics['total_engagement'].median()
+
+    ax.axvline(x_med, color='black', linestyle='--', alpha=0.5)
+    ax.axhline(y_med, color='black', linestyle='--', alpha=0.5)
+
+    # 4. Annotate the "Story" Quadrants
+    # Top Left
+    ax.text(0.05, 0.90, "🔥 BUSY BUT TEMPORARY\n(The Risk Zone)", 
+            transform=ax.transAxes, color='red', fontweight='bold', fontsize=12, 
+            bbox=dict(facecolor='white', alpha=0.8, edgecolor='red'))
+    
+    # Top Right
+    ax.text(0.70, 0.90, "✅ STABLE & BUSY\n(Model Centers)", 
+            transform=ax.transAxes, color='green', fontweight='bold', fontsize=12, 
+            bbox=dict(facecolor='white', alpha=0.8, edgecolor='green'))
+
+    # Bottom Right
+    ax.text(0.70, 0.10, "🔄 STABLE BUT QUIET\n(Underutilized)", 
+            transform=ax.transAxes, color='blue', fontweight='bold', fontsize=12, 
+            bbox=dict(facecolor='white', alpha=0.8, edgecolor='blue'))
+
+    # 5. Final Polish
+    ax.set_yscale('log')
+    ax.set_title("Infrastructure Stability Matrix: Persistence vs. Engagement", fontsize=20, fontweight='bold', pad=25)
+    ax.set_xlabel("Persistence (Total Days Active)", fontsize=14)
+    ax.set_ylabel("Total Engagement (Log Scale)", fontsize=14)
+    ax.grid(True, linestyle=':', alpha=0.6)
+
+    plt.tight_layout()
+    return fig
+
+
+
+
+def get_ridgeline_load(df):
+    # 1. Filter and Prepare
+    active_months = df[df['total_updates'] > 0].copy()
+    active_months['month'] = active_months['date'].dt.strftime('%B')
+    active_months['month_num'] = active_months['date'].dt.month
+
+    daily_load = active_months.groupby(['date', 'month', 'month_num'])['total_updates'].sum().reset_index()
+    
+    # Log scale + Jitter for smooth density
+    noise = np.random.normal(0, 0.01, len(daily_load))
+    daily_load['log_updates'] = np.log10(daily_load['total_updates'] + 1) + noise
+    
+    months_present = daily_load.sort_values('month_num')['month'].unique()
+
+    # 2. Setup
+    sns.set_theme(style="white", rc={"axes.facecolor": (0, 0, 0, 0)})
+    pal = sns.color_palette("viridis", n_colors=len(months_present))
+
+    g = sns.FacetGrid(daily_load, row="month", hue="month", aspect=12, height=1.5, 
+                      palette=pal, row_order=months_present)
+
+    # 3. Draw KDE Waves
+    g.map(sns.kdeplot, "log_updates", clip_on=False, fill=True, alpha=0.8, lw=2.5, bw_adjust=1.0)
+    g.map(sns.kdeplot, "log_updates", clip_on=False, color="white", lw=2, bw_adjust=1.0)
+
+    # 4. Annotations
+    def annotate_ridge(x, **kwargs):
+        median = x.median()
+        plt.axvline(median, color='black', linestyle='--', lw=2, alpha=0.7)
+        tail_90 = x.quantile(0.9)
+        plt.axvspan(tail_90, x.max(), color='#e74c3c', alpha=0.4)
+
+    g.map(annotate_ridge, "log_updates")
+
+    # 5. Overlap and Polish
+    g.fig.subplots_adjust(hspace=-0.5)
+    g.set_titles("")
+    g.set(yticks=[], ylabel="")
+    g.despine(bottom=True, left=True)
+
+    ticks = [3, 4, 5, 6, 7]
+    g.set(xticks=ticks)
+    g.set_xticklabels(["1K", "10K", "100K", "1M", "10M"])
+
+    for i, ax in enumerate(g.axes.flat):
+        ax.text(-0.02, 0.2, months_present[i], fontweight="bold", 
+                fontsize=13, color='black', ha="right", transform=ax.transAxes)
+
+    g.fig.suptitle("Workload Fingerprints: Demand Stability & Surge Risk", fontsize=22, fontweight='bold', y=0.98)
+    
+    return g.fig
+
+
+import plotly.express as px
+
+def get_priority_treemap(df):
+    # 1. Prepare and Clean the Data
+    treemap_data = df[df['total_enrolment'] > 0].groupby(['state', 'district']).agg({
+        'total_enrolment': 'sum',
+        'infra_stress_score': 'mean'
+    }).reset_index()
+
+    # 2. Create the Treemap
+    fig = px.treemap(
+        treemap_data, 
+        path=[px.Constant("India"), 'state', 'district'], 
+        values='total_enrolment', 
+        color='infra_stress_score', 
+        color_continuous_scale='YlOrRd', # Yellow to Orange to Red
+        title='🎯 National Priority Map: Stress vs. Impact'
+    )
+
+    # 3. Styling
+    fig.update_layout(
+        margin=dict(t=50, l=10, r=10, b=10),
+        title_font_size=20,
+        title_x=0.5,
+        height=700 # Give it plenty of height for readability
+    )
+    
+    return fig
+
+
+
+
+def get_risk_bubble_chart(df):
+    # 1. Aggregate data at the District level
+    district_risk = df.groupby(['state', 'district']).agg({
+        'infra_stress_score': 'mean',
+        'compliance_gap': 'mean',
+        'total_updates': 'sum'
+    }).reset_index()
+
+    # 2. Filter out zero-value districts
+    district_risk = district_risk[district_risk['total_updates'] > 0]
+
+    # 3. Create the Bubble Chart
+    fig = px.scatter(
+        district_risk,
+        x='infra_stress_score',
+        y='compliance_gap',
+        size='total_updates',
+        color='state', 
+        hover_name='district',
+        size_max=60,
+        title="🚨 District Risk Matrix: Stress vs. Compliance Gap",
+        labels={
+            'infra_stress_score': 'Infrastructure Stress',
+            'compliance_gap': 'Compliance Gap',
+            'total_updates': 'Total Volume'
+        }
+    )
+
+    # 4. Add Quadrant Lines
+    stress_median = district_risk['infra_stress_score'].median()
+    gap_median = district_risk['compliance_gap'].median()
+    fig.add_hline(y=gap_median, line_dash="dash", line_color="gray", opacity=0.5)
+    fig.add_vline(x=stress_median, line_dash="dash", line_color="gray", opacity=0.5)
+
+    # 5. Add Strategic Annotations
+    fig.add_annotation(x=district_risk['infra_stress_score'].max(), y=district_risk['compliance_gap'].max(),
+                text="🔴 RED ZONE", showarrow=False, font=dict(color="red", size=14))
+    fig.add_annotation(x=district_risk['infra_stress_score'].min(), y=district_risk['compliance_gap'].min(),
+                text="🟢 STABLE", showarrow=False, font=dict(color="green", size=14))
+
+    fig.update_layout(template="plotly_white", height=700)
+    
+    return fig
+
+
+
+
+def get_performance_radar(df, context_name):
+    # 1. Define Categories (Ensure these were calculated in your loader)
+    categories = ['Maturity', 'Stress', 'Compliance', 'Digital Adoption', 'Efficiency']
+    
+    # 2. Prepare Data (Mean of scores for the current filtered context)
+    # Note: Ensure these columns exist in your df from the loader's score calculations
+    radar_vals = [
+        df['maturity_score'].mean(),
+        df['infra_stress_score'].mean(),
+        df['compliance_score'].mean(), # Assuming gap is inverted to a score
+        df['digital_adoption_score'].mean(),
+        df['efficiency_score'].mean()
+    ]
+    
+    # Close the loop for the radar plot
+    radar_vals += [radar_vals[0]]
+    radar_categories = categories + [categories[0]]
+
+    # 3. Create Figure
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatterpolar(
+        r=radar_vals,
+        theta=radar_categories,
+        fill='toself',
+        name=context_name,
+        line_color='#1abc9c',
+        fillcolor='rgba(26, 188, 156, 0.3)'
+    ))
+
+    # 4. Styling
+    fig.update_layout(
+        polar=dict(
+            radialaxis=dict(visible=True, range=[0, 100])
+        ),
+        showlegend=False,
+        title=f"🛡️ Strategic Ecosystem Profile: {context_name}",
+        title_x=0.5,
+        height=500
+    )
+    
+    return fig
+
+
+
+def get_district_risk_scatter(df):
+    # 1. Aggregate data at the District level
+    district_risk = df.groupby(['state', 'district']).agg({
+        'infra_stress_score': 'mean',
+        'compliance_gap': 'mean',
+        'total_updates': 'sum'
+    }).reset_index()
+
+    # 2. Filter out zero-value districts
+    district_risk = district_risk[district_risk['total_updates'] > 0]
+
+    # 3. Create the Bubble Chart
+    fig = px.scatter(
+        district_risk,
+        x='infra_stress_score',
+        y='compliance_gap',
+        size='total_updates',
+        color='state', 
+        hover_name='district',
+        size_max=60,
+        title="🚨 District Risk Matrix: Stress vs. Compliance Gap",
+        labels={
+            'infra_stress_score': 'Infrastructure Stress',
+            'compliance_gap': 'Compliance Gap',
+            'total_updates': 'Impact Volume'
+        }
+    )
+
+    # 4. Add Quadrant Lines (Thresholds)
+    stress_median = district_risk['infra_stress_score'].median()
+    gap_median = district_risk['compliance_gap'].median()
+
+    fig.add_hline(y=gap_median, line_dash="dash", line_color="gray", opacity=0.5)
+    fig.add_vline(x=stress_median, line_dash="dash", line_color="gray", opacity=0.5)
+
+    # 5. Add Strategic Annotations
+    fig.add_annotation(x=district_risk['infra_stress_score'].max(), y=district_risk['compliance_gap'].max(),
+                text="🔴 RED ZONE: High Stress & High Gap", showarrow=False, font=dict(color="red", size=12))
+    fig.add_annotation(x=district_risk['infra_stress_score'].min(), y=district_risk['compliance_gap'].min(),
+                text="🟢 STABLE: Low Stress & Low Gap", showarrow=False, font=dict(color="green", size=12))
+
+    fig.update_layout(template="plotly_white", height=600, margin=dict(t=80))
+    
     return fig
