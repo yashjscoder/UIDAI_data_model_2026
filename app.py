@@ -95,49 +95,46 @@ with st.sidebar.expander("📂 View Raw/Unprocessed Data"):
 # --- THE REST OF YOUR TABS START HERE ---
 # tab1, tab2, tab3, tab4 = st.tabs(...)
 with tab1:
-    st.header("Growth & Adoption Dynamics")
+    st.header("GROWTH BASED VISUAL ANALYSIS") # Using the bold name we set
     
-    # --- ROW 1: Leaders & Split ---
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        st.subheader("1. State-wise Enrolment Leaderboard")
-        st.pyplot(viz.get_state_leaderboard(main_df))
-    with col2:
-        st.subheader("2. Service Mix")
-        st.pyplot(viz.get_service_split(main_df, state_filter))
+    # 1. Leaderboard
+    st.subheader("1. State-wise Enrolment Leaderboard")
+    st.pyplot(viz.get_state_leaderboard(main_df))
+    st.divider() 
 
+    # 2. Service Mix
+    st.subheader("2. Service Mix")
+    st.pyplot(viz.get_service_split(main_df, state_filter))
     st.divider()
 
-    # --- ROW 2: Localized & Regional Split ---
+    # 3. Localized Demand
     st.subheader("3. Localized District-Level Demand")
     st.pyplot(viz.get_localized_demand(main_df))
+    st.divider()
     
+    # 4. Operation Breakdown
     st.subheader("4. State-wise Operation Breakdown")
     st.pyplot(viz.get_state_service_split(main_df))
-
     st.divider()
 
-    # --- ROW 3: Strategy ---
+    # 5. Strategic Zones
     st.subheader("🎯 Strategic Intervention Zones")
     st.pyplot(viz.get_strategic_districts(main_df))
     st.success("Target these districts for specialized resource deployment.")
-
-    # New Time Series Visual
-    st.subheader("1. System Heartbeat (Temporal Trends)")
-    st.pyplot(viz.get_service_timeseries(main_df, state_filter))
-    st.info("💡 Note: The Y-axis is on a Logarithmic scale to compare New Enrolments and Updates effectively.")
-
     st.divider()
+
+    # 6. Trends
+    st.subheader("6. System Heartbeat (Temporal Trends)")
+    st.pyplot(viz.get_service_timeseries(main_df, state_filter))
+    st.info("💡 Note: The Y-axis is on a Logarithmic scale.")
+    st.divider()
+
+    # 7. Saturation
+    st.subheader("7. Market Saturation (Cumulative Delivery)")
+    st.pyplot(viz.get_saturation_curve(main_df, state_filter))
+    st.success(f"Processed {main_df['total_enrolment'].sum():,.0f} enrolments.")
 
     
-    # --- NEW VISUAL: Saturation Curve ---
-    st.subheader("2. Market Saturation (Cumulative Delivery)")
-    st.pyplot(viz.get_saturation_curve(main_df, state_filter))
-    st.success(f"Successfully processed {main_df['total_enrolment'].sum():,.0f} new enrolments in this view.")
-
-    st.divider()
-
-
 with tab2:
     st.header("Demographic Intelligence")
     
