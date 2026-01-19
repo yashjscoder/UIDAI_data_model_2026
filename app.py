@@ -4,6 +4,44 @@ from modules import visualizer as viz
 
 st.set_page_config(page_title="UIDAI Ecosystem Intelligence", layout="wide")
 
+# --- CUSTOM CSS FOR PREMIUM TABS ---
+st.markdown("""
+    <style>
+    /* 1. Target the Tab Container */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 10px;
+        background-color: transparent;
+    }
+
+    /* 2. Style each individual Tab Button */
+    .stTabs [data-baseweb="tab"] {
+        height: 60px;
+        white-space: pre-wrap;
+        background-color: #f0f2f6; /* Light gray background for unselected */
+        border-radius: 8px 8px 0px 0px; /* Boxed shape */
+        gap: 1px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        border: 1px solid #dfe1e6;
+    }
+
+    /* 3. Style the Active/Selected Tab */
+    .stTabs [aria-selected="true"] {
+        background-color: #ffffff !important;
+        border-bottom: 3px solid #ff4b4b !important; /* UIDAI Red accent */
+        font-weight: bold !important;
+    }
+
+    /* 4. Bold and Capitalize Tab Text */
+    .stTabs [data-baseweb="tab"] p {
+        font-size: 16px;
+        font-weight: 800; /* Extra Bold */
+        text-transform: uppercase; /* Capital Letters */
+        color: #31333f;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
 # LOAD DATA
 @st.cache_data
 def load_data():
@@ -23,7 +61,13 @@ state_filter = st.sidebar.selectbox("Select State", ["National Overview"] + list
 main_df = df if state_filter == "National Overview" else df[df['state'] == state_filter]
 
 # TABS FOR YOUR 20+ VISUALS
-tab1, tab2, tab3, tab4 = st.tabs(["📊 Growth", "👥 Demographics", "🌊 Operational Stress", "🛡️ Strategy"])
+# Updated Naming Convention
+tab1, tab2, tab3, tab4 = st.tabs([
+    "📊 GROWTH BASED VISUAL ANALYSIS", 
+    "👥 DEMOGRAPHIC INTELLIGENCE & GAP", 
+    "🌊 OPERATIONAL STRESS & RESILIENCE", 
+    "🛡️ STRATEGIC INTERVENTION & RISK"
+])
 
 st.sidebar.info(f"Currently viewing: {state_filter}")
 
