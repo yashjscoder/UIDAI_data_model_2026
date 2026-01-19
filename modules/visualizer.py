@@ -8,24 +8,36 @@ import plotly.graph_objects as go
 
 
 def get_raw_data_summary():
-    """Logic to scan the directory and return summaries of all CSVs found."""
+    """Logic to scan the directory and return summaries of all CSVs found safely."""
     data_path = 'data/' if os.path.exists('data/') else './'
     files = [f for f in os.listdir(data_path) if f.endswith('.csv')]
     
     summaries = []
     for file in files:
         file_path = os.path.join(data_path, file)
-        temp_df = pd.read_csv(file_path, nrows=5)
-        full_df = pd.read_csv(file_path)
         
+        # 1. Only read the first few rows for sample and dtypes (Very fast, no memory)
+        temp_df = pd.read_csv(file_path, nrows=5)
+        
+        # 2. Calculate missing values in CHUNKS (Memory Efficient)
+        # This iterates through the file in blocks of 50,000 rows instead of loading all at once
+        missing_series = None
+        try:
+            for chunk in pd.read_csv(file_path, chunksize=50000, low_memory=True):
+                if missing_series is None:
+                    missing_series = chunk.isnull().sum()
+                else:
+                    missing_series += chunk.isnull().sum()
+        except Exception:
+            missing_series = "Could not calculate (File too large)"
+
         summaries.append({
             "name": file,
             "sample": temp_df.head(2),
             "dtypes": temp_df.dtypes.astype(str),
-            "missing": full_df.isnull().sum()
+            "missing": missing_series
         })
     return summaries
-
 def get_state_leaderboard(df):
     # 1. Prepare data
     state_enrolment = df.groupby('state')['total_enrolment'].sum().sort_values(ascending=False).head(15).reset_index()
