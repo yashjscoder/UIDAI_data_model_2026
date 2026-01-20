@@ -7,6 +7,7 @@ import numpy as np
 import plotly.graph_objects as go
 
 
+@st.cache_resource
 def get_raw_data_summary():
     """Logic to scan the directory and return summaries of all CSVs found safely."""
     data_path = 'data/' if os.path.exists('data/') else './'
@@ -38,9 +39,11 @@ def get_raw_data_summary():
             "missing": missing_series
         })
     return summaries
-def get_state_leaderboard(df):
+
+@st.cache_resource
+def get_state_leaderboard(_df):
     # 1. Prepare data
-    state_enrolment = df.groupby('state')['total_enrolment'].sum().sort_values(ascending=False).head(15).reset_index()
+    state_enrolment = _df.groupby('state')['total_enrolment'].sum().sort_values(ascending=False).head(15).reset_index()
 
     # 2. Set style
     fig, ax = plt.subplots(figsize=(14, 8))
@@ -72,12 +75,13 @@ def get_state_leaderboard(df):
     
     return fig
 
-def get_localized_demand(df):
+@st.cache_resource
+def get_localized_demand(_df):
     # 1. Prepare Data
-    state_totals = df.groupby('state')['total_enrolment'].sum()
+    state_totals = _df.groupby('state')['total_enrolment'].sum()
     top_n_states = state_totals.nlargest(10).index
 
-    top_data = df[df['state'].isin(top_n_states)]
+    top_data = _df[_df['state'].isin(top_n_states)]
     dist_data = top_data.groupby(['state', 'district'])['total_enrolment'].sum().reset_index()
 
     dist_data = dist_data.sort_values(['state', 'total_enrolment'], ascending=[True, False])
@@ -112,11 +116,12 @@ def get_localized_demand(df):
     return g.fig
 
 
-def get_service_split(df, context_name):
+@st.cache_resource
+def get_service_split(_df, context_name):
     # 1. Aggregate Totals
     national_data = pd.DataFrame({
         'Category': ['New Enrolments', 'Information Updates'],
-        'Volume': [df['total_enrolment'].sum(), df['total_updates'].sum()]
+        'Volume': [_df['total_enrolment'].sum(), _df['total_updates'].sum()]
     })
 
     # 2. Plotting
@@ -136,8 +141,9 @@ def get_service_split(df, context_name):
     ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
     return fig
 
-def get_state_service_split(df):
-    state_split = df.groupby('state')[['total_enrolment', 'total_updates']].sum().reset_index()
+@st.cache_resource
+def get_state_service_split(_df):
+    state_split = _df.groupby('state')[['total_enrolment', 'total_updates']].sum().reset_index()
     state_split['total'] = state_split['total_enrolment'] + state_split['total_updates']
     state_split = state_split.sort_values('total', ascending=False).head(20) # Showing top 20 for clarity
 
@@ -152,8 +158,9 @@ def get_state_service_split(df):
     plt.tight_layout()
     return fig
 
-def get_strategic_districts(df):
-    district_stats = df.groupby(['state', 'district']).agg({
+@st.cache_resource
+def get_strategic_districts(_df):
+    district_stats = _df.groupby(['state', 'district']).agg({
         'total_enrolment': 'sum',
         'total_updates': 'sum'
     }).reset_index()
@@ -179,11 +186,12 @@ def get_strategic_districts(df):
 
 
 
-def get_service_timeseries(df, context_name):
+@st.cache_resource
+def get_service_timeseries(_df, context_name):
     # 1. Prepare Data
     # Ensure date is datetime (already done in load_data but safe to have here)
-    df['date'] = pd.to_datetime(df['date'])
-    daily_load = df.groupby('date')[['total_enrolment', 'total_updates']].sum().reset_index()
+    _df['date'] = pd.to_datetime(_df['date'])
+    daily_load = _df.groupby('date')[['total_enrolment', 'total_updates']].sum().reset_index()
 
     # 2. Plotting
     fig, ax = plt.subplots(figsize=(16, 7))
@@ -214,10 +222,11 @@ def get_service_timeseries(df, context_name):
 
 
 
-def get_saturation_curve(df, context_name):
+@st.cache_resource
+def get_saturation_curve(_df, context_name):
     # 1. Prepare Cumulative Data
-    df['date'] = pd.to_datetime(df['date'])
-    daily_totals = df.groupby('date')[['total_enrolment', 'total_updates']].sum().sort_index()
+    _df['date'] = pd.to_datetime(_df['date'])
+    daily_totals = _df.groupby('date')[['total_enrolment', 'total_updates']].sum().sort_index()
 
     # Calculate Running Totals (Cumulative Sum)
     daily_totals['cum_enrolment'] = daily_totals['total_enrolment'].cumsum()
@@ -258,13 +267,14 @@ def get_saturation_curve(df, context_name):
 
     return fig
 
-def get_demographic_mix(df):
+@st.cache_resource
+def get_demographic_mix(_df):
     # 1. Calculate Absolute Mix
     age_cols = ['age_0_5', 'age_5_17', 'age_18_greater']
-    mix_data = df[age_cols].sum()
+    mix_data = _df[age_cols].sum()
     
     # 2. Calculate "Hidden" Adult Activity (Updates)
-    adult_updates = df['demo_age_17_'].sum() + df['bio_age_17_'].sum()
+    adult_updates = _df['demo_age_17_'].sum() + _df['bio_age_17_'].sum()
     
     # 3. Create Donut Chart
     fig, ax = plt.subplots(figsize=(8, 8))
@@ -293,13 +303,14 @@ def get_demographic_mix(df):
 
 
 
-def get_compliance_violin(df, state_filter):
+@st.cache_resource
+def get_compliance_violin(_df, state_filter):
     # 1. Logic: If "National", show top 10 gaps. If "State", show that state specifically.
     if state_filter == "National Overview":
-        top_gap_states = df.groupby('state')['compliance_gap'].sum().nlargest(10).index
-        violin_df = df[df['state'].isin(top_gap_states)]
+        top_gap_states = _df.groupby('state')['compliance_gap'].sum().nlargest(10).index
+        violin_df = _df[_df['state'].isin(top_gap_states)]
     else:
-        violin_df = df # Already filtered by main_df in app.py
+        violin_df = _df # Already filtered by main_df in app.py
 
     # 2. Plotting
     fig, ax = plt.subplots(figsize=(16, 10))
@@ -336,12 +347,13 @@ def get_compliance_violin(df, state_filter):
 
 
 
-def get_update_dna(df, context_name):
+@st.cache_resource
+def get_update_dna(_df, context_name):
     # 1. Determine grouping level (State if National, District if State selected)
     group_col = 'state' if context_name == "National Overview" else 'district'
     
     # 2. Prepare Data
-    update_type_df = df.groupby(group_col).agg({
+    update_type_df = _df.groupby(group_col).agg({
         'demo_age_17_': 'sum',
         'bio_age_17_': 'sum'
     }).reset_index()
@@ -379,13 +391,14 @@ def get_update_dna(df, context_name):
 
 
 
-def get_migration_signal(df):
+@st.cache_resource
+def get_migration_signal(_df):
     # 1. Self-Healing Column Mapping
-    demo_cols = [c for c in df.columns if 'demo' in c.lower()]
-    bio_cols = [c for c in df.columns if 'bio' in c.lower()]
+    demo_cols = [c for c in _df.columns if 'demo' in c.lower()]
+    bio_cols = [c for c in _df.columns if 'bio' in c.lower()]
 
     # 2. Prepare Time-Series Data
-    migration_signal = df.groupby('date').agg({
+    migration_signal = _df.groupby('date').agg({
         **{col: 'sum' for col in demo_cols},
         **{col: 'sum' for col in bio_cols}
     }).reset_index()
@@ -447,9 +460,10 @@ def get_migration_signal(df):
 
     return fig
 
-def get_pincode_stability(df):
+@st.cache_resource
+def get_pincode_stability(_df):
     # 1. Prepare Data: Unique pincodes only
-    pincode_stability = df[['pincode', 'pincode_persistence']].drop_duplicates()
+    pincode_stability = _df[['pincode', 'pincode_persistence']].drop_duplicates()
 
     # 2. Set Plot Style
     fig, ax = plt.subplots(figsize=(12, 7))
@@ -488,10 +502,11 @@ def get_pincode_stability(df):
     return fig
 
 
-def get_operational_heatmap(df):
+@st.cache_resource
+def get_operational_heatmap(_df):
     # --- 0. SAFETY CHECK ---
     # Check if the dataframe is empty or missing the required columns
-    if df.empty or 'month' not in df.columns or 'day_name' not in df.columns:
+    if _df.empty or 'month' not in _df.columns or 'day_name' not in _df.columns:
         fig, ax = plt.subplots(figsize=(14, 8))
         ax.text(0.5, 0.5, "No data available for the selected filters", 
                 ha='center', va='center', fontsize=14)
@@ -503,10 +518,10 @@ def get_operational_heatmap(df):
                    'July', 'August', 'September', 'October', 'November', 'December']
     
     # Filter only the months present to avoid empty rows
-    existing_months = [m for m in month_order if m in df['month'].unique()]
+    existing_months = [m for m in month_order if m in _df['month'].unique()]
 
     # Create pivot table
-    heatmap_data = df.groupby(['month', 'day_name'])['total_updates'].sum().unstack().fillna(0)
+    heatmap_data = _df.groupby(['month', 'day_name'])['total_updates'].sum().unstack().fillna(0)
     
     # Reorder Rows and Columns
     heatmap_data = heatmap_data.reindex(index=existing_months, columns=days_order).fillna(0)
@@ -546,10 +561,11 @@ def get_operational_heatmap(df):
     return fig
 
 
-def get_efficiency_boxplot(df):
+@st.cache_resource
+def get_efficiency_boxplot(_df):
     # 1. Get the Top 15 States by volume to keep the chart readable
-    top_15_states = df.groupby('state')['total_updates'].sum().nlargest(15).index
-    efficiency_df = df[df['state'].isin(top_15_states)]
+    top_15_states = _df.groupby('state')['total_updates'].sum().nlargest(15).index
+    efficiency_df = _df[_df['state'].isin(top_15_states)]
 
     # 2. Set Plotting Style
     fig, ax = plt.subplots(figsize=(18, 10))
@@ -569,7 +585,7 @@ def get_efficiency_boxplot(df):
     )
 
     # 4. Add the National Benchmarking Line
-    national_median = df['efficiency_score'].median()
+    national_median = _df['efficiency_score'].median()
     ax.axhline(national_median, color='red', linestyle='--', alpha=0.8, label=f'National Median: {national_median:.2f}')
 
     # 5. Styling
@@ -589,9 +605,10 @@ def get_efficiency_boxplot(df):
 
 
 
-def get_stability_matrix(df):
+@st.cache_resource
+def get_stability_matrix(_df):
     # 1. Prepare the Data per Pincode
-    pincode_metrics = df.groupby('pincode').agg({
+    pincode_metrics = _df.groupby('pincode').agg({
         'pincode_persistence': 'first',
         'total_enrolment': 'sum',
         'total_updates': 'sum',
@@ -652,10 +669,11 @@ def get_stability_matrix(df):
 
 
 
-def get_ridgeline_load(df):
+@st.cache_resource
+def get_ridgeline_load(_df):
     # --- MEMORY GUARD: AGGREGATE BEFORE PLOTTING ---
     # 1. Select only columns needed and ensure date is datetime
-    df_mini = df[['date', 'total_updates']].copy()
+    df_mini = _df[['date', 'total_updates']].copy()
     df_mini['date'] = pd.to_datetime(df_mini['date'])
     
     # 2. Group by Date to reduce 2 million rows to ~365 rows
@@ -716,9 +734,10 @@ def get_ridgeline_load(df):
 
 import plotly.express as px
 
-def get_priority_treemap(df):
+@st.cache_resource
+def get_priority_treemap(_df):
     # 1. Prepare and Clean the Data
-    treemap_data = df[df['total_enrolment'] > 0].groupby(['state', 'district']).agg({
+    treemap_data = _df[_df['total_enrolment'] > 0].groupby(['state', 'district']).agg({
         'total_enrolment': 'sum',
         'infra_stress_score': 'mean'
     }).reset_index()
@@ -761,43 +780,44 @@ def get_priority_treemap(df):
     return fig
 
 
-def get_performance_radar(df, context_name):
+@st.cache_resource
+def get_performance_radar(_df, context_name):
     # --- 0. SCORE CALCULATION (Fixes the KeyError) ---
     # We create these metrics based on common UIDAI data columns
     # If your columns have different names (like 'Enrolment'), update the strings below
     
-    if 'maturity_score' not in df.columns:
+    if 'maturity_score' not in _df.columns:
         # Scale of 0-100 based on volume
-        max_val = df['total_enrolment'].max() if df['total_enrolment'].max() > 0 else 1
-        df['maturity_score'] = (df['total_enrolment'] / max_val) * 100
+        max_val = _df['total_enrolment'].max() if _df['total_enrolment'].max() > 0 else 1
+        _df['maturity_score'] = (_df['total_enrolment'] / max_val) * 100
 
-    if 'infra_stress_score' not in df.columns:
+    if 'infra_stress_score' not in _df.columns:
         # High rejection rate = High Stress
         # Assuming you have a 'rejected' or 'errors' column
-        if 'rejected' in df.columns:
-            df['infra_stress_score'] = (df['rejected'] / df['total_enrolment'].replace(0, 1)) * 100
+        if 'rejected' in _df.columns:
+            _df['infra_stress_score'] = (_df['rejected'] / _df['total_enrolment'].replace(0, 1)) * 100
         else:
-            df['infra_stress_score'] = 20  # Fallback constant if column missing
+            _df['infra_stress_score'] = 20  # Fallback constant if column missing
 
-    if 'compliance_score' not in df.columns:
-        df['compliance_score'] = 85  # Standard benchmark fallback
+    if 'compliance_score' not in _df.columns:
+        _df['compliance_score'] = 85  # Standard benchmark fallback
 
-    if 'digital_adoption_score' not in df.columns:
-        df['digital_adoption_score'] = 70 # Standard benchmark fallback
+    if 'digital_adoption_score' not in _df.columns:
+        _df['digital_adoption_score'] = 70 # Standard benchmark fallback
 
-    if 'efficiency_score' not in df.columns:
-        df['efficiency_score'] = 90 # Standard benchmark fallback
+    if 'efficiency_score' not in _df.columns:
+        _df['efficiency_score'] = 90 # Standard benchmark fallback
 
     # 1. Define Categories
     categories = ['Maturity', 'Stress', 'Compliance', 'Digital Adoption', 'Efficiency']
     
     # 2. Prepare Data (Mean of scores)
     radar_vals = [
-        df['maturity_score'].mean(),
-        df['infra_stress_score'].mean(),
-        df['compliance_score'].mean(),
-        df['digital_adoption_score'].mean(),
-        df['efficiency_score'].mean()
+        _df['maturity_score'].mean(),
+        _df['infra_stress_score'].mean(),
+        _df['compliance_score'].mean(),
+        _df['digital_adoption_score'].mean(),
+        _df['efficiency_score'].mean()
     ]
     
     # Close the loop for the radar plot
@@ -843,7 +863,7 @@ def get_ai_guide(visual_id):
         "service_mix": {
             "title": "National Service Mix: Onboarding vs Lifecycle Maintenance",
             "what_it_is": "A stacked bar composition chart showing how total workload splits between New Enrolments and Information Updates.",
-            "how_to_read": "The total bar = total service volume. Each segment’s % shows workload share. Dominant 'Updates' signal a maintenance-era system.",
+            "how_to_read": "The total bar = total service volume. Each segment's % shows workload share. Dominant 'Updates' signal a maintenance-era system.",
             "impact": "Helps justify strategic shift from 'enrolment expansion' to 'update operations + quality.' Defines Aadhaar as a Living Identity System."
         },
         "localized_demand": {
@@ -964,9 +984,10 @@ def get_ai_guide(visual_id):
     }
     return guides.get(visual_id, {"title": "Strategic Visual", "what_it_is": "Data visualization", "how_to_read": "Analyze the trends.", "impact": "Operational insight."})
 
-def get_district_risk_scatter(df):
+@st.cache_resource
+def get_district_risk_scatter(_df):
     # 1. Aggregate data at the District level
-    district_risk = df.groupby(['state', 'district']).agg({
+    district_risk = _df.groupby(['state', 'district']).agg({
         'infra_stress_score': 'mean',
         'compliance_gap': 'mean',
         'total_updates': 'sum'
@@ -1012,9 +1033,10 @@ def get_district_risk_scatter(df):
 
 
 
-def get_frontier_density_map(df):
+@st.cache_resource
+def get_frontier_density_map(_df):
     # 1. Prepare Center-Level Metrics
-    center_stats = df.groupby(['pincode', 'state']).agg({
+    center_stats = _df.groupby(['pincode', 'state']).agg({
         'pincode_persistence': 'mean', 
         'total_updates': 'sum'
     }).reset_index()
@@ -1078,10 +1100,11 @@ def get_frontier_density_map(df):
 
 import plotly.graph_objects as go
 
-def get_system_flow_sankey(df):
+@st.cache_resource
+def get_system_flow_sankey(_df):
     # 1. Prepare the Buckets
-    demographic_updates = df[[c for c in df.columns if 'demo' in c.lower()]].sum().sum()
-    biometric_updates = df[[c for c in df.columns if 'bio' in c.lower()]].sum().sum()
+    demographic_updates = _df[[c for c in _df.columns if 'demo' in c.lower()]].sum().sum()
+    biometric_updates = _df[[c for c in _df.columns if 'bio' in c.lower()]].sum().sum()
     
     # Logic for flow distribution
     label = ["New Enrolments", "Demographic Updates", "Biometric Updates", "Mandatory Cycles", "Voluntary Corrections"]
