@@ -42,7 +42,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 1. DATA LOADING SECTION ---
+# --- DATA LOADING ---
 @st.cache_data
 def load_data():
     data = pd.read_csv('data/df_master.csv', low_memory=False)
@@ -50,6 +50,7 @@ def load_data():
         data['date'] = pd.to_datetime(data['date'])
     return data
 
+# THIS LINE MUST BE NAMED 'df' TO MATCH THE REST OF YOUR CODE
 df = load_data()
 
 # SIDEBAR FILTERS
