@@ -346,135 +346,79 @@ with tab3:
         - **Wide Bases:** Volatile demand. 
         - **Red Zones:** Black Swan events that overwhelm infrastructure.
     """)
-with tab4:
-    # ... (Keep the Ridgeline Load Plot here) ...
 
-    st.divider()
 
-    st.subheader("2. Strategic Priority Matrix (Treemap)")
-    st.write("""
-        This interactive treemap helps prioritize **budget allocation**.
-        - **Box Size:** Total Enrolment (The 'Impact'—how many people live there).
-        - **Box Color (Redder):** Higher Infrastructure Stress (The 'Urgency').
-    """)
-    
-    # Use plotly_chart for interactive treemaps
+    with tab4:
+    st.header("🎯 STRATEGIC INTERVENTION & RISK")
+
+    # --- 1. Priority Treemap ---
+    st.subheader("1. Strategic Priority Matrix (Treemap)")
+    with st.popover("✨ Ask AI: About this Visual"):
+        guide = viz.get_ai_guide("priority_treemap")
+        st.markdown(f"### 🤖 {guide['title']}")
+        st.write(f"**What it is:** {guide['what_it_is']}")
+        st.write(f"**How to Read:** {guide['how_to_read']}")
+        st.info(f"**Strategic Impact:** {guide['impact']}")
+
     fig_tree = viz.get_priority_treemap(main_df)
     st.plotly_chart(fig_tree, use_container_width=True)
-    
-    st.info("""
-        💡 **How to use:** Click on a State to drill down into its Districts. 
-        Large Red blocks represent districts that need immediate budget for permanent Aadhaar Seva Kendras.
-    """)
-
-
-
-
-    # ... (Keep previous visuals like Ridgeline and Treemap) ...
+    st.info("💡 **How to use:** Large Red blocks represent districts that need immediate budget for permanent centers.")
 
     st.divider()
 
-    st.subheader("3. Strategic Risk Profiling")
-    st.write("""
-        This Risk Matrix correlates **Operational Stress** with the **Enrolment Gap**. 
-        Districts in the **Red Zone** are high-impact areas where demand is exceeding supply 
-        and the citizen gap is widest.
-    """)
-    
+    # --- 2. Risk Profiling ---
+    st.subheader("2. Strategic Risk Profiling")
+    with st.popover("✨ Ask AI: About this Visual"):
+        guide = viz.get_ai_guide("risk_profiling")
+        st.markdown(f"### 🤖 {guide['title']}")
+        st.write(f"**What it is:** {guide['what_it_is']}")
+        st.write(f"**How to Read:** {guide['how_to_read']}")
+        st.info(f"**Strategic Impact:** {guide['impact']}")
+
     fig_risk = viz.get_district_risk_scatter(main_df)
-    st.plotly_chart(fig_risk, use_container_width=True)
-    
-    st.warning("""
-        **Executive Summary:** - **X-Axis (Stress):** High values mean centers are overworked.
-        - **Y-Axis (Gap):** High values mean large numbers of 5-17 year olds are missing Aadhaar.
-        - **Bubble Size:** Represents the total workload of that district.
-    """)
-
-
-
-    
-    # ... (Previous Strategy visuals) ...
+    st.plotly_chart(fig_risk, use_container_width=True, key="risk_bubble_tab4")
+    st.warning("**Executive Summary:** Bubbles in the Red Zone (Upper-Right) are high-impact areas where demand exceeds supply.")
 
     st.divider()
 
-    st.subheader("4. Ecosystem Balance: Multi-Factor Analysis")
-    st.write("""
-        The **Radar Chart** provides a balanced scorecard of the ecosystem. 
-        A larger area indicates a more mature and stable Aadhaar infrastructure.
-    """)
-    
-    # Use the filtered main_df so the radar reflects the sidebar selection
+    # --- 3. Performance Radar ---
+    st.subheader("3. Ecosystem Balance: Multi-Factor Analysis")
+    with st.popover("✨ Ask AI: About this Visual"):
+        guide = viz.get_ai_guide("performance_radar")
+        st.markdown(f"### 🤖 {guide['title']}")
+        st.write(f"**What it is:** {guide['what_it_is']}")
+        st.write(f"**How to Read:** {guide['how_to_read']}")
+        st.info(f"**Strategic Impact:** {guide['impact']}")
+
     fig_radar = viz.get_performance_radar(main_df, state_filter)
     st.plotly_chart(fig_radar, use_container_width=True)
-    
-    st.info("""
-        **Metric Breakdown:**
-        - **Maturity:** High volume of historical enrolments.
-        - **Digital Adoption:** High ratio of demographic updates over biometric.
-        - **Compliance:** Success in closing the 5-17 age group gap.
-    """)
-
-
-    
-    # ... (previous visuals) ...
-    
-    st.divider()
-    
-    st.subheader("3. District-Level Risk Analysis")
-    st.write("""
-        This matrix identifies districts where the system is failing both in **Efficiency** (High Stress) 
-        and **Inclusion** (High Compliance Gap). 
-    """)
-    
-    fig_risk = viz.get_district_risk_scatter(main_df)
-    st.plotly_chart(fig_risk, use_container_width=True, key="risk_bubble_chart_unique")
-    
-    st.info("""
-        **How to prioritize:** - **Upper-Right (Red):** Critical need for permanent centers and massive enrolment camps.
-        - **Upper-Left:** High missing population, but infrastructure is underutilized (Needs awareness camps).
-        - **Lower-Right:** System is very busy with updates, but enrolment is complete (Needs more update kiosks).
-    """)
-
-
-
-    
-    # ... (previous visuals) ...
 
     st.divider()
 
-    st.subheader("5. The Goldilocks Frontier (Operational Efficiency)")
-    st.write("""
-        This 2D Density Map identifies the **Efficiency Frontier**. 
-        We are looking for centers that move out of 'Fragile Hotspots' and 'Dormant' zones 
-        into the green dashed 'Goldilocks' zone.
-    """)
-    
+    # --- 4. Goldilocks Frontier ---
+    st.subheader("4. The Goldilocks Frontier (Operational Efficiency)")
+    with st.popover("✨ Ask AI: About this Visual"):
+        guide = viz.get_ai_guide("goldilocks_frontier")
+        st.markdown(f"### 🤖 {guide['title']}")
+        st.write(f"**What it is:** {guide['what_it_is']}")
+        st.write(f"**How to Read:** {guide['how_to_read']}")
+        st.info(f"**Strategic Impact:** {guide['impact']}")
+
     fig_frontier = viz.get_frontier_density_map(main_df)
     st.pyplot(fig_frontier)
-    
-    st.success("""
-        **Strategic Mission:** Move resources from 'Dormant' centers (bottom right) 
-        to reinforce 'Fragile Hotspots' (top left) to achieve a balanced national ecosystem.
-    """)
-
-
-
-    # ... (all previous Strategy visuals) ...
+    st.success("🎯 **Strategic Mission:** Move resources from 'Dormant' centers to reinforce 'Fragile Hotspots'.")
 
     st.divider()
 
-    st.subheader("6. The Aadhaar Lifecycle: System Flow Analysis")
-    st.write("""
-        This Sankey diagram visualizes the **transition of the ecosystem**. 
-        As the nation reaches saturation, the flow shifts from 'New Enrolments' (Left) 
-        to 'Maintenance & Updates' (Right).
-    """)
-    
+    # --- 5. System Flow (Sankey) ---
+    st.subheader("5. The Aadhaar Lifecycle: System Flow Analysis")
+    with st.popover("✨ Ask AI: About this Visual"):
+        guide = viz.get_ai_guide("system_flow")
+        st.markdown(f"### 🤖 {guide['title']}")
+        st.write(f"**What it is:** {guide['what_it_is']}")
+        st.write(f"**How to Read:** {guide['how_to_read']}")
+        st.info(f"**Strategic Impact:** {guide['impact']}")
+
     fig_sankey = viz.get_system_flow_sankey(main_df)
     st.plotly_chart(fig_sankey, use_container_width=True)
-    
-    st.success("""
-        **Final Strategic Insight:** The future of UIDAI is no longer about 
-        onboarding—it's about managing the flow of 'Mandatory Cycles' and 
-        streamlining 'Voluntary Corrections' through digital channels.
-    """)
+    st.success("**Final Strategic Insight:** The future of UIDAI is about managing flows of 'Mandatory Cycles'.")

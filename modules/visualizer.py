@@ -929,6 +929,36 @@ def get_ai_guide(visual_id):
             "what_it_is": "A ridgeline plot showing the distribution of workload surges over a period of time.",
             "how_to_read": "Sharp peaks = Predictable demand. Wide/Flat bases = Volatile, unpredictable demand waves.",
             "impact": "Reveals the 'System Heartbeat'. Areas with wide bases need mobile 'Buffer Kits' on standby to handle sudden spikes that would crush standard infrastructure."
+        },
+        "priority_treemap": {
+            "title": "Strategic Priority Matrix: Budget Allocation",
+            "what_it_is": "A hierarchical treemap visualizing total impact (population) vs. infrastructure urgency.",
+            "how_to_read": "Box size = Total Enrolment Volume. Color (Dark Red) = High Infrastructure Stress. Click boxes to drill down from State to District.",
+            "impact": "Guides the 2026-2027 Budget. Large red blocks are the highest ROI areas for building new permanent Aadhaar Seva Kendras."
+        },
+        "risk_profiling": {
+            "title": "District-Level Strategic Risk Profiling",
+            "what_it_is": "A 2D Risk Matrix correlating Operational Stress (workload) with the Enrolment Gap (missing population).",
+            "how_to_read": "Upper-Right (Red Zone): Critical failure risk. Lower-Right: Saturated but overworked. Upper-Left: High gap but low usage.",
+            "impact": "Identifies where the system is failing both in Efficiency and Inclusion. Directly dictates where 'Strike Teams' should be sent."
+        },
+        "performance_radar": {
+            "title": "Ecosystem Balance: Multi-Factor Scorecard",
+            "what_it_is": "A radar chart providing a balanced view of Maturity, Digital Adoption, and Compliance.",
+            "how_to_read": "A larger, symmetrical area indicates a healthy, balanced state ecosystem. Sharp 'dents' indicate specific weaknesses.",
+            "impact": "Provides a 'State Health Certificate'. Helps state governments see if they are lagging in digital adoption vs. physical enrolment."
+        },
+        "goldilocks_frontier": {
+            "title": "The Goldilocks Frontier: Operational Efficiency",
+            "what_it_is": "A 2D Density Map identifying the 'Sweet Spot' of operational load.",
+            "how_to_read": "Green Dash Zone: Ideal performance. Top-Left: Fragile hotspots (Overloaded). Bottom-Right: Dormant assets (Underutilized).",
+            "impact": "Enables 'Resource Rebalancing.' Shows exactly where to move hardware from dormant centers to reinforce fragile ones."
+        },
+        "system_flow": {
+            "title": "The Aadhaar Lifecycle: System Flow Analysis",
+            "what_it_is": "A Sankey diagram visualizing the transition from Onboarding (New) to Lifecycle Maintenance (Updates).",
+            "how_to_read": "The width of the lines shows the volume. A thick 'Update' flow indicates a mature, maintenance-mode economy.",
+            "impact": "The ultimate 'Maturity Proof'. Proves that UIDAI has successfully moved from a 'Startup Phase' to a 'National Utility Phase'."
         }
 
     }
