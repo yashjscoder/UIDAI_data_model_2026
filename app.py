@@ -42,16 +42,20 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# LOAD DATA
+# --- 1. DATA LOADING SECTION ---
 @st.cache_data
 def load_data():
-    df = pd.read_csv('data/df_master.csv')
-    # Ensure date column is datetime
+    # 1. Load with low_memory=False to keep answers consistent
+    df = pd.read_csv('data/df_master.csv', low_memory=False)
+    
+    # 2. Convert date column if it exists
     if 'date' in df.columns:
         df['date'] = pd.to_datetime(df['date'])
+    
     return df
 
-df = load_data()
+# ONE call to get your data
+main_df = load_data()
 
 # SIDEBAR FILTERS
 st.sidebar.title("🛡️ UIDAI Control Room by UIDAI_10362")

@@ -5,7 +5,9 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 import plotly.graph_objects as go
-
+import matplotlib
+matplotlib.rcParams['axes.unicode_minus'] = False
+plt.rcParams['font.family'] = 'sans-serif'
 
 @st.cache_resource
 def get_raw_data_summary():
