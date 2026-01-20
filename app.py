@@ -262,97 +262,90 @@ with tab2:
     st.plotly_chart(viz.get_migration_signal(main_df), use_container_width=True)
     st.info("💡 **Strategy:** High 'Blue Line' areas are candidates for enhanced digital self-service kiosks.")
 
-
 with tab3:
     st.header("🌊 Operational Stress & Infrastructure Health")
     
-    st.write("""
-        This tab analyzes the **resilience** of the UIDAI ecosystem. 
-        We look at how stable the centers are and identify regions where the infrastructure 
-        is under 'Stress' due to high demand but low persistence.
-    """)
+    st.write("This tab analyzes the **resilience** of the UIDAI ecosystem.")
     
-    # Visual: Pincode Stability
+    # --- 1. Pincode Stability ---
     st.subheader("1. Center Persistence Analysis")
-    fig_stability = viz.get_pincode_stability(main_df)
-    st.pyplot(fig_stability)
-    
+    with st.popover("✨ Ask AI: About this Visual"):
+        guide = viz.get_ai_guide("pincode_stability")
+        st.markdown(f"### 🤖 {guide['title']}")
+        st.write(f"**What it is:** {guide['what_it_is']}")
+        st.write(f"**How to Read:** {guide['how_to_read']}")
+        st.info(f"**Strategic Impact:** {guide['impact']}")
+
+    st.pyplot(viz.get_pincode_stability(main_df))
     st.warning("💡 **Operational Insight:** Regions with a high count of low-persistence pincodes (left side) are likely being served by mobile vans or temporary camps.")
-#############################
     
     st.divider()
     
+    # --- 2. Heatmap ---
     st.subheader("2. Temporal Stress: Peak Demand Windows")
-    st.write("""
-        This heatmap identifies **when** the system is under the most pressure. 
-        Darker cells indicate periods where server bandwidth and staff availability 
-        should be at their maximum.
-    """)
-    
+    with st.popover("✨ Ask AI: About this Visual"):
+        guide = viz.get_ai_guide("operational_heatmap")
+        st.markdown(f"### 🤖 {guide['title']}")
+        st.write(f"**What it is:** {guide['what_it_is']}")
+        st.write(f"**How to Read:** {guide['how_to_read']}")
+        st.info(f"**Strategic Impact:** {guide['impact']}")
+
     fig_heatmap = viz.get_operational_heatmap(main_df)
     st.pyplot(fig_heatmap)
-    
     st.info("🎯 **Recommendation:** Use this data to schedule system maintenance during light-colored windows (low load) to minimize citizen impact.")
 
-
-
-    # ... (Keep Heatmap and Stability visuals) ...
-    
     st.divider()
     
+    # --- 3. Efficiency Boxplot ---
     st.subheader("3. Workflow Consistency: Efficiency Benchmarking")
-    st.write("""
-        This boxplot measures the **quality of operations**. 
-        - **Short boxes** indicate that all districts in that state perform similarly (Stable).
-        - **Tall boxes** indicate a massive gap between the best and worst-performing districts (Inefficient).
-    """)
-    
-    fig_efficiency = viz.get_efficiency_boxplot(main_df)
-    st.pyplot(fig_efficiency)
-    
+    with st.popover("✨ Ask AI: About this Visual"):
+        guide = viz.get_ai_guide("efficiency_boxplot")
+        st.markdown(f"### 🤖 {guide['title']}")
+        st.write(f"**What it is:** {guide['what_it_is']}")
+        st.write(f"**How to Read:** {guide['how_to_read']}")
+        st.info(f"**Strategic Impact:** {guide['impact']}")
+
+    st.pyplot(viz.get_efficiency_boxplot(main_df))
     with st.expander("💡 Strategic Analysis"):
         st.write("""
             States appearing **above the red line** are your 'Efficiency Leaders'. 
             States with **long vertical lines (whiskers)** have districts that are 
-            severely over-leveraged and at risk of hardware failure or staff burnout.
+            severely over-leveraged.
         """)
 
-
-
-
-
-    # ... (Keep Heatmap and Boxplot visuals) ...
-    
     st.divider()
     
+    # --- 4. Stability Matrix ---
     st.subheader("4. Infrastructure Stability Matrix")
-    st.write("""
-        This scatter plot maps every unique pincode into four strategic quadrants. 
-        It identifies where we need to convert temporary camps into permanent 'Aadhaar Seva Kendras'.
-    """)
-    
-    fig_matrix = viz.get_stability_matrix(main_df)
-    st.pyplot(fig_matrix)
-    
+    with st.popover("✨ Ask AI: About this Visual"):
+        guide = viz.get_ai_guide("stability_matrix")
+        st.markdown(f"### 🤖 {guide['title']}")
+        st.write(f"**What it is:** {guide['what_it_is']}")
+        st.write(f"**How to Read:** {guide['how_to_read']}")
+        st.info(f"**Strategic Impact:** {guide['impact']}")
+
+    st.pyplot(viz.get_stability_matrix(main_df))
     st.error("🚨 **Strategic Risk:** Points in the top-left quadrant represent millions of citizens relying on infrastructure that could vanish tomorrow.")
 
-
-
-   
+    st.divider()
     
-    # Visual: Ridgeline Load
-    st.subheader("1. Seasonal Workload 'Fingerprints'")
+    # --- 5. Ridgeline ---
+    st.subheader("5. Seasonal Workload 'Fingerprints'")
+    with st.popover("✨ Ask AI: About this Visual"):
+        guide = viz.get_ai_guide("ridgeline_load")
+        st.markdown(f"### 🤖 {guide['title']}")
+        st.write(f"**What it is:** {guide['what_it_is']}")
+        st.write(f"**How to Read:** {guide['how_to_read']}")
+        st.info(f"**Strategic Impact:** {guide['impact']}")
+
     with st.spinner("Calculating density distributions..."):
-        fig_ridge = viz.get_ridgeline_load(main_df)
-        st.pyplot(fig_ridge)
+        st.pyplot(viz.get_ridgeline_load(main_df))
     
     st.success("""
-        **Strategic Takeaway:** - **Sharp Peaks:** Highly predictable demand. Efficient for standard staffing.
-        - **Wide Bases:** Volatile demand. Requires 'Buffer' capacity or mobile kits on standby.
-        - **Red Zones:** These days represent 'Black Swan' events that overwhelm standard infrastructure.
+        **Strategic Takeaway:** - **Sharp Peaks:** Predictable demand. 
+        - **Wide Bases:** Volatile demand. 
+        - **Red Zones:** Black Swan events that overwhelm infrastructure.
     """)
-
-
 with tab4:
     # ... (Keep the Ridgeline Load Plot here) ...
 

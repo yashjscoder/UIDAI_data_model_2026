@@ -899,6 +899,36 @@ def get_ai_guide(visual_id):
             "what_it_is": "A dual-axis trend analysis comparing Address/Demographic updates against standard Biometric maintenance cycles.",
             "how_to_read": "Look for 'Divergence.' If the blue line (Address) rises while the orange line (Biometric) is flat, citizens are moving for work/education.",
             "impact": "Predicts regional population shifts. Useful for planning temporary Aadhaar Seva Kendras in rapidly growing urban corridors."
+        },
+        "pincode_stability": {
+            "title": "Center Persistence & Infrastructure Reliability",
+            "what_it_is": "A frequency analysis of how many days specific pincodes (centers) remain active in the ecosystem.",
+            "how_to_read": "X-axis: Days Active. High counts on the far left indicate 'Transient Infrastructure' (camps), while bars on the right indicate 'Permanent Anchors'.",
+            "impact": "Identifies the stability of the touchpoint network. Low persistence in high-volume areas suggests a critical need for permanent Aadhaar Seva Kendras."
+        },
+        "operational_heatmap": {
+            "title": "Temporal Stress: Peak Demand Windows",
+            "what_it_is": "A 2D density heatmap mapping service volume across days of the week and hours of the day.",
+            "how_to_read": "Darker cells represent 'High-Stress' windows. Lighter cells represent 'System Recovery' periods.",
+            "impact": "Informs server maintenance schedules and staff shift rotations. Targeted resource deployment during 'Dark Zones' prevents system timeouts and citizen wait-times."
+        },
+        "efficiency_boxplot": {
+            "title": "Workflow Consistency: Efficiency Benchmarking",
+            "what_it_is": "A statistical distribution plot comparing service efficiency across states and districts.",
+            "how_to_read": "The 'Box' is the middle 50% of districts. Tall boxes = High Inconsistency. Short boxes = Process Maturity.",
+            "impact": "Detects 'Operational Inequality'. Large whiskers reveal districts that are severely over-leveraged and at risk of hardware failure or operator burnout."
+        },
+        "stability_matrix": {
+            "title": "Infrastructure Stability Matrix (Quadrants)",
+            "what_it_is": "A scatter plot mapping centers by Volume vs. Persistence to categorize them into strategic archetypes.",
+            "how_to_read": "Top-Right: Reliable Powerhouses. Top-Left: High-Risk Temporary Hubs. Bottom-Right: Underutilized Fixed Assets.",
+            "impact": "Directly guides infrastructure investment. High-volume, low-persistence centers are 'Strategic Risks' that need immediate conversion to permanent status."
+        },
+        "ridgeline_load": {
+            "title": "Seasonal Workload 'Fingerprints' (Density Analysis)",
+            "what_it_is": "A ridgeline plot showing the distribution of workload surges over a period of time.",
+            "how_to_read": "Sharp peaks = Predictable demand. Wide/Flat bases = Volatile, unpredictable demand waves.",
+            "impact": "Reveals the 'System Heartbeat'. Areas with wide bases need mobile 'Buffer Kits' on standby to handle sudden spikes that would crush standard infrastructure."
         }
 
     }
