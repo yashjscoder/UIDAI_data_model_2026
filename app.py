@@ -54,7 +54,7 @@ def load_data():
 df = load_data()
 
 # SIDEBAR FILTERS
-st.sidebar.title("🛡️ UIDAI Control Room")
+st.sidebar.title("🛡️ UIDAI Control Room by UIDAI_10362")
 state_filter = st.sidebar.selectbox("Select State", ["National Overview"] + list(df['state'].unique()))
 
 # DYNAMIC DATA FILTERING
@@ -348,7 +348,7 @@ with tab3:
     """)
 
 
-    with tab4:
+with tab4:
     st.header("🎯 STRATEGIC INTERVENTION & RISK")
 
     # --- 1. Priority Treemap ---
