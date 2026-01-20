@@ -175,14 +175,20 @@ with tab1:
         st.info(f"**Strategic Impact:** {guide['impact']}")
     st.pyplot(viz.get_saturation_curve(main_df, state_filter))
 
-
 with tab2:
     st.header("Demographic Intelligence")
     
-    # Call the new diagnostic function
+    # --- 1. Demographic Mix + AI Popover ---
+    st.subheader("1. Aadhaar Lifecycle Composition: Age-Group Distribution")
+    with st.popover("✨ Ask AI: About this Visual"):
+        guide = viz.get_ai_guide("demographic_mix")
+        st.markdown(f"### 🤖 {guide['title']}")
+        st.write(f"**What it is:** {guide['what_it_is']}")
+        st.write(f"**How to Read:** {guide['how_to_read']}")
+        st.info(f"**Strategic Impact:** {guide['impact']}")
+
     fig_age, age_totals, hidden_adults = viz.get_demographic_mix(main_df)
     
-    # Create Columns for Top Stats (The Integrity Check)
     m1, m2, m3 = st.columns(3)
     m1.metric("Child (0-5)", f"{age_totals['age_0_5']:,.0f}")
     m2.metric("Youth (5-17)", f"{age_totals['age_5_17']:,.0f}")
@@ -190,13 +196,12 @@ with tab2:
     
     st.divider()
     
-    # Display the Donut Chart and the "Hidden" Insight
     col_chart, col_text = st.columns([2, 1])
-    
     with col_chart:
         st.pyplot(fig_age)
         
     with col_text:
+        # Keeping your important Integrity Signal as requested
         st.subheader("🔍 Data Integrity Signal")
         st.write("Beyond new enrolments, we detected significant adult activity in maintenance logs:")
         st.info(f"**Total Adult Updates:** {hidden_adults:,.0f}")
@@ -206,16 +211,19 @@ with tab2:
             demographic updates (Re-verification).
         """)
 
-        st.divider()
+    st.divider()
     
-    st.subheader("📍 Compliance Risk Distribution")
-    st.write("""
-        This violin plot reveals the **nature of the enrolment gap** in the critical 5-17 age group. 
-        It helps decide if we need a state-wide policy or targeted local camps.
-    """)
-    
-    fig_violin = viz.get_compliance_violin(main_df, state_filter)
-    st.pyplot(fig_violin)
+    # --- 2. Compliance Risk + AI Popover ---
+    st.subheader("2. Regional Compliance & Enrolment Gap Distribution")
+    with st.popover("✨ Ask AI: About this Visual"):
+        guide = viz.get_ai_guide("compliance_violin")
+        st.markdown(f"### 🤖 {guide['title']}")
+        st.write(f"**What it is:** {guide['what_it_is']}")
+        st.write(f"**How to Read:** {guide['how_to_read']}")
+        st.info(f"**Strategic Impact:** {guide['impact']}")
+
+    st.write("This violin plot reveals the **nature of the enrolment gap** in the critical 5-17 age group.")
+    st.pyplot(viz.get_compliance_violin(main_df, state_filter))
     
     with st.expander("📝 How to read this chart"):
         st.write("""
@@ -224,41 +232,35 @@ with tab2:
             - **The 'Tail':** Outlier districts that are either doing very well or very poorly.
         """)
 
-
-
-
-        st.divider()
+    st.divider()
     
-    st.subheader("🧬 Update DNA: Service Type Demand")
-    st.write("""
-        This grouped analysis identifies the **Mode of Engagement**. 
-        - **High Biometric %**: Requires physical center presence (Hardware heavy).
-        - **High Demographic %**: Potential for digital/online self-service adoption.
-    """)
-    
-    fig_dna = viz.get_update_dna(main_df, state_filter)
-    st.pyplot(fig_dna)
-    
+    # --- 3. Update DNA + AI Popover ---
+    st.subheader("3. Update DNA: Biometric vs. Demographic Engagement")
+    with st.popover("✨ Ask AI: About this Visual"):
+        guide = viz.get_ai_guide("update_dna")
+        st.markdown(f"### 🤖 {guide['title']}")
+        st.write(f"**What it is:** {guide['what_it_is']}")
+        st.write(f"**How to Read:** {guide['how_to_read']}")
+        st.info(f"**Strategic Impact:** {guide['impact']}")
+
+    st.write("This grouped analysis identifies the **Mode of Engagement**.")
+    st.pyplot(viz.get_update_dna(main_df, state_filter))
     st.warning("⚡ **Insight:** High Biometric demand areas need more physical machines and iris scanners.")
-
-
-
 
     st.divider()
     
-    st.subheader("📈 Digital Migration Signal")
-    st.write("""
-        This dual-axis chart compares **Address/Demographic** updates (blue) with **Biometric** updates (orange).
-        - **Divergence:** If Address updates rise while Biometrics stay flat, it indicates high regional mobility (people moving for jobs/education).
-        - **Convergence:** Shows standard identity maintenance cycles.
-    """)
-    
-    # Use st.plotly_chart for the interactive Plotly figure
-    fig_migration = viz.get_migration_signal(main_df)
-    st.plotly_chart(fig_migration, use_container_width=True)
-    
-    st.info("💡 **Strategy:** High 'Blue Line' areas are candidates for enhanced digital self-service kiosks.")
+    # --- 4. Digital Migration Signal + AI Popover ---
+    st.subheader("4. Socio-Economic Mobility & Digital Migration Signal")
+    with st.popover("✨ Ask AI: About this Visual"):
+        guide = viz.get_ai_guide("migration_signal")
+        st.markdown(f"### 🤖 {guide['title']}")
+        st.write(f"**What it is:** {guide['what_it_is']}")
+        st.write(f"**How to Read:** {guide['how_to_read']}")
+        st.info(f"**Strategic Impact:** {guide['impact']}")
 
+    st.write("This dual-axis chart compares **Address/Demographic** updates with **Biometric** updates.")
+    st.plotly_chart(viz.get_migration_signal(main_df), use_container_width=True)
+    st.info("💡 **Strategy:** High 'Blue Line' areas are candidates for enhanced digital self-service kiosks.")
 
 
 with tab3:

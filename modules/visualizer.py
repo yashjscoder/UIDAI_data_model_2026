@@ -875,7 +875,32 @@ def get_ai_guide(visual_id):
             "what_it_is": "A cumulative enrolment curve showing how total enrolments accumulate over time.",
             "how_to_read": "Steep curve = drive phase. Flattening curve = approaching saturation. Compare states for lifecycle stage.",
             "impact": "Strategic planning signal: indicates when to stop aggressive expansion and shift budget to quality, compliance, and uptime."
+        },
+        "demographic_mix": {
+            "title": "Aadhaar Lifecycle Composition: Age-Group Distribution",
+            "what_it_is": "A donut chart analyzing the share of new enrolments across Child (0-5), Youth (5-17), and Adult (18+) segments.",
+            "how_to_read": "The ring segments show the volume of new citizens entering the ecosystem. A smaller adult slice is normal for a mature system.",
+            "impact": "Shifts focus to 'Entry-Point' management. High child enrolment requires better coordination with hospitals and birth-registration centers."
+        },
+        "compliance_violin": {
+            "title": "Regional Compliance & Enrolment Gap Distribution",
+            "what_it_is": "A violin plot showing the density and distribution of enrolment gaps in the critical 5-17 age group across districts.",
+            "how_to_read": "The 'bulge' shows where most districts sit relative to the target red line. Wide bulges far below the line indicate a systemic regional failure.",
+            "impact": "Used to decide between state-wide policy changes (for wide bulges) or localized 'Strike Teams' (for long, thin outliers)."
+        },
+        "update_dna": {
+            "title": "Update DNA: Biometric vs. Demographic Engagement",
+            "what_it_is": "A grouped analysis identifying the specific mode of citizen engagement—physical (Biometric) vs. potentially digital (Demographic).",
+            "how_to_read": "Compare the heights of Biometric vs. Demographic bars. A dominance in Demographic updates suggests high potential for self-service portal adoption.",
+            "impact": "Optimizes hardware logistics. High Biometric demand areas need immediate deployment of iris scanners and fingerprint slabs."
+        },
+        "migration_signal": {
+            "title": "Socio-Economic Mobility & Digital Migration Signal",
+            "what_it_is": "A dual-axis trend analysis comparing Address/Demographic updates against standard Biometric maintenance cycles.",
+            "how_to_read": "Look for 'Divergence.' If the blue line (Address) rises while the orange line (Biometric) is flat, citizens are moving for work/education.",
+            "impact": "Predicts regional population shifts. Useful for planning temporary Aadhaar Seva Kendras in rapidly growing urban corridors."
         }
+
     }
     return guides.get(visual_id, {"title": "Strategic Visual", "what_it_is": "Data visualization", "how_to_read": "Analyze the trends.", "impact": "Operational insight."})
 
