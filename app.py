@@ -94,47 +94,88 @@ with st.sidebar.expander("📂 View Raw/Unprocessed Data"):
 
 # --- THE REST OF YOUR TABS START HERE ---
 # tab1, tab2, tab3, tab4 = st.tabs(...)
+# tabs with enhanced names and AI smart guides (smart layer).
 with tab1:
-    st.header("GROWTH BASED VISUAL ANALYSIS") # Using the bold name we set
+    st.header("GROWTH BASED VISUAL ANALYSIS") 
     
-    # 1. Leaderboard
-    st.subheader("1. State-wise Enrolment Leaderboard")
+    # --- 1. Leaderboard ---
+    st.subheader("1. State-wise Enrolment Concentration Leaderboard")
+    with st.popover("✨ Ask AI: About this Visual"):
+        guide = viz.get_ai_guide("leaderboard")
+        st.markdown(f"### 🤖 {guide['title']}")
+        st.write(f"**What it is:** {guide['what_it_is']}")
+        st.write(f"**How to Read:** {guide['how_to_read']}")
+        st.info(f"**Strategic Impact:** {guide['impact']}")
     st.pyplot(viz.get_state_leaderboard(main_df))
     st.divider() 
 
-    # 2. Service Mix
-    st.subheader("2. Service Mix")
+    # --- 2. Service Mix ---
+    st.subheader("2. National Service Mix: Onboarding vs Lifecycle Maintenance")
+    with st.popover("✨ Ask AI: About this Visual"):
+        guide = viz.get_ai_guide("service_mix")
+        st.markdown(f"### 🤖 {guide['title']}")
+        st.write(f"**What it is:** {guide['what_it_is']}")
+        st.write(f"**How to Read:** {guide['how_to_read']}")
+        st.info(f"**Strategic Impact:** {guide['impact']}")
     st.pyplot(viz.get_service_split(main_df, state_filter))
     st.divider()
 
-    # 3. Localized Demand
-    st.subheader("3. Localized District-Level Demand")
+    # --- 3. Localized Demand ---
+    st.subheader("3. State-to-District Demand Hotspots")
+    with st.popover("✨ Ask AI: About this Visual"):
+        guide = viz.get_ai_guide("localized_demand")
+        st.markdown(f"### 🤖 {guide['title']}")
+        st.write(f"**What it is:** {guide['what_it_is']}")
+        st.write(f"**How to Read:** {guide['how_to_read']}")
+        st.info(f"**Strategic Impact:** {guide['impact']}")
     st.pyplot(viz.get_localized_demand(main_df))
     st.divider()
     
-    # 4. Operation Breakdown
-    st.subheader("4. State-wise Operation Breakdown")
+    # --- 4. Operation Breakdown ---
+    st.subheader("4. State-wise Operational Load Split: Enrolment vs Updates")
+    with st.popover("✨ Ask AI: About this Visual"):
+        guide = viz.get_ai_guide("state_service_split")
+        st.markdown(f"### 🤖 {guide['title']}")
+        st.write(f"**What it is:** {guide['what_it_is']}")
+        st.write(f"**How to Read:** {guide['how_to_read']}")
+        st.info(f"**Strategic Impact:** {guide['impact']}")
     st.pyplot(viz.get_state_service_split(main_df))
     st.divider()
 
-    # 5. Strategic Zones
-    st.subheader("🎯 Strategic Intervention Zones")
+    # --- 5. Strategic Zones ---
+    st.subheader("5. Strategic Intervention Districts: Risk/Attention Bands")
+    with st.popover("✨ Ask AI: About this Visual"):
+        guide = viz.get_ai_guide("strategic_districts")
+        st.markdown(f"### 🤖 {guide['title']}")
+        st.write(f"**What it is:** {guide['what_it_is']}")
+        st.write(f"**How to Read:** {guide['how_to_read']}")
+        st.info(f"**Strategic Impact:** {guide['impact']}")
     st.pyplot(viz.get_strategic_districts(main_df))
     st.success("Target these districts for specialized resource deployment.")
     st.divider()
 
-    # 6. Trends
-    st.subheader("6. System Heartbeat (Temporal Trends)")
+    # --- 6. Trends ---
+    st.subheader("6. National System Heartbeat: Daily Service Volume Trend (Log Scale)")
+    with st.popover("✨ Ask AI: About this Visual"):
+        guide = viz.get_ai_guide("timeseries")
+        st.markdown(f"### 🤖 {guide['title']}")
+        st.write(f"**What it is:** {guide['what_it_is']}")
+        st.write(f"**How to Read:** {guide['how_to_read']}")
+        st.info(f"**Strategic Impact:** {guide['impact']}")
     st.pyplot(viz.get_service_timeseries(main_df, state_filter))
-    st.info("💡 Note: The Y-axis is on a Logarithmic scale.")
     st.divider()
 
-    # 7. Saturation
-    st.subheader("7. Market Saturation (Cumulative Delivery)")
+    # --- 7. Saturation ---
+    st.subheader("7. Enrolment Saturation Trajectory (Cumulative Adoption Curve)")
+    with st.popover("✨ Ask AI: About this Visual"):
+        guide = viz.get_ai_guide("saturation")
+        st.markdown(f"### 🤖 {guide['title']}")
+        st.write(f"**What it is:** {guide['what_it_is']}")
+        st.write(f"**How to Read:** {guide['how_to_read']}")
+        st.info(f"**Strategic Impact:** {guide['impact']}")
     st.pyplot(viz.get_saturation_curve(main_df, state_filter))
-    st.success(f"Processed {main_df['total_enrolment'].sum():,.0f} enrolments.")
 
-    
+
 with tab2:
     st.header("Demographic Intelligence")
     

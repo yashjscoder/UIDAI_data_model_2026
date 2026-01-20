@@ -652,33 +652,40 @@ def get_stability_matrix(df):
 
 
 
-
 def get_ridgeline_load(df):
-    # 1. Filter and Prepare
-    active_months = df[df['total_updates'] > 0].copy()
-    active_months['month'] = active_months['date'].dt.strftime('%B')
-    active_months['month_num'] = active_months['date'].dt.month
-
-    daily_load = active_months.groupby(['date', 'month', 'month_num'])['total_updates'].sum().reset_index()
+    # --- MEMORY GUARD: AGGREGATE BEFORE PLOTTING ---
+    # 1. Select only columns needed and ensure date is datetime
+    df_mini = df[['date', 'total_updates']].copy()
+    df_mini['date'] = pd.to_datetime(df_mini['date'])
+    
+    # 2. Group by Date to reduce 2 million rows to ~365 rows
+    # This is the "Secret Sauce" to stop the Memory Error
+    daily_load = df_mini.groupby('date')['total_updates'].sum().reset_index()
+    
+    # 3. Filter and Prepare
+    active_days = daily_load[daily_load['total_updates'] > 0].copy()
+    active_days['month'] = active_days['date'].dt.strftime('%B')
+    active_days['month_num'] = active_days['date'].dt.month
     
     # Log scale + Jitter for smooth density
-    noise = np.random.normal(0, 0.01, len(daily_load))
-    daily_load['log_updates'] = np.log10(daily_load['total_updates'] + 1) + noise
+    noise = np.random.normal(0, 0.01, len(active_days))
+    active_days['log_updates'] = np.log10(active_days['total_updates'] + 1) + noise
     
-    months_present = daily_load.sort_values('month_num')['month'].unique()
+    months_present = active_days.sort_values('month_num')['month'].unique()
 
-    # 2. Setup
+    # 4. Setup Theme
     sns.set_theme(style="white", rc={"axes.facecolor": (0, 0, 0, 0)})
     pal = sns.color_palette("viridis", n_colors=len(months_present))
 
-    g = sns.FacetGrid(daily_load, row="month", hue="month", aspect=12, height=1.5, 
+    # 5. FacetGrid (This is safe now because daily_load is small)
+    g = sns.FacetGrid(active_days, row="month", hue="month", aspect=12, height=1.5, 
                       palette=pal, row_order=months_present)
 
-    # 3. Draw KDE Waves
+    # 6. Draw KDE Waves
     g.map(sns.kdeplot, "log_updates", clip_on=False, fill=True, alpha=0.8, lw=2.5, bw_adjust=1.0)
     g.map(sns.kdeplot, "log_updates", clip_on=False, color="white", lw=2, bw_adjust=1.0)
 
-    # 4. Annotations
+    # 7. Annotations
     def annotate_ridge(x, **kwargs):
         median = x.median()
         plt.axvline(median, color='black', linestyle='--', lw=2, alpha=0.7)
@@ -687,24 +694,25 @@ def get_ridgeline_load(df):
 
     g.map(annotate_ridge, "log_updates")
 
-    # 5. Overlap and Polish
+    # 8. Overlap and Polish
     g.fig.subplots_adjust(hspace=-0.5)
     g.set_titles("")
     g.set(yticks=[], ylabel="")
     g.despine(bottom=True, left=True)
 
+    # Adjusted ticks based on daily totals
     ticks = [3, 4, 5, 6, 7]
     g.set(xticks=ticks)
     g.set_xticklabels(["1K", "10K", "100K", "1M", "10M"])
 
     for i, ax in enumerate(g.axes.flat):
-        ax.text(-0.02, 0.2, months_present[i], fontweight="bold", 
-                fontsize=13, color='black', ha="right", transform=ax.transAxes)
+        if i < len(months_present):
+            ax.text(-0.02, 0.2, months_present[i], fontweight="bold", 
+                    fontsize=13, color='black', ha="right", transform=ax.transAxes)
 
     g.fig.suptitle("Workload Fingerprints: Demand Stability & Surge Risk", fontsize=22, fontweight='bold', y=0.98)
     
     return g.fig
-
 
 import plotly.express as px
 
@@ -823,6 +831,53 @@ def get_performance_radar(df, context_name):
     )
     
     return fig
+
+def get_ai_guide(visual_id):
+    guides = {
+        "leaderboard": {
+            "title": "State-wise Enrolment Concentration Leaderboard",
+            "what_it_is": "A horizontal bar ranking of states by total Aadhaar enrolment volume (Top N).",
+            "how_to_read": "Y-axis: States | X-axis: Total enrolments. Longer bar = higher enrolment contribution. Use it to spot national volume drivers instantly.",
+            "impact": "Identifies priority states where enrolment capacity and infrastructure planning has the largest national ROI. Useful for resource allocation."
+        },
+        "service_mix": {
+            "title": "National Service Mix: Onboarding vs Lifecycle Maintenance",
+            "what_it_is": "A stacked bar composition chart showing how total workload splits between New Enrolments and Information Updates.",
+            "how_to_read": "The total bar = total service volume. Each segment’s % shows workload share. Dominant 'Updates' signal a maintenance-era system.",
+            "impact": "Helps justify strategic shift from 'enrolment expansion' to 'update operations + quality.' Defines Aadhaar as a Living Identity System."
+        },
+        "localized_demand": {
+            "title": "State-to-District Demand Hotspots",
+            "what_it_is": "A small-multiples bar grid: for each state, it plots top districts by enrolment / local demand.",
+            "how_to_read": "Each mini-chart = one state. Bars = districts. Shows within-state concentration—whether demand is broad or localized.",
+            "impact": "Enables micro-targeting: UIDAI can deploy mobile units to top districts instead of blanket state-level decisions. Detects single-district overload."
+        },
+        "state_service_split": {
+            "title": "State-wise Operational Load Split: Enrolment vs Updates",
+            "what_it_is": "A stacked bar by state showing total volume split into New Enrolments and Information Updates.",
+            "how_to_read": "Each state bar = total operations. Orange dominance = maintenance mode; Blue dominance = expansion mode.",
+            "impact": "Creates operational segmentation: Expansion states need enrolment capacity, while maintenance states need update throughput and biometric infra."
+        },
+        "strategic_districts": {
+            "title": "Strategic Intervention Districts: Risk/Attention Bands",
+            "what_it_is": "A classified bar chart identifying districts needing intervention (High-Pressure, Anomalous, or Low-Engagement).",
+            "how_to_read": "Bars represent districts. Colors show category. Look for districts that are high volume AND flagged for specific action.",
+            "impact": "Directly answers 'where should UIDAI act first?' Supports targeted actions like adding counters or auditing anomalies."
+        },
+        "timeseries": {
+            "title": "National System Heartbeat: Daily Service Volume Trend (Log Scale)",
+            "what_it_is": "A two-line daily time series plotting New Enrolments vs Information Updates on a log scale.",
+            "how_to_read": "X-axis = timeline. Y-axis = volume (log). Spikes = surge windows, drives, or deadlines. Compare lines to see system evolution.",
+            "impact": "Provides surge detection. Helps plan staff rosters and system scaling around low-demand windows to minimize citizen impact."
+        },
+        "saturation": {
+            "title": "Enrolment Saturation Trajectory (Cumulative Adoption Curve)",
+            "what_it_is": "A cumulative enrolment curve showing how total enrolments accumulate over time.",
+            "how_to_read": "Steep curve = drive phase. Flattening curve = approaching saturation. Compare states for lifecycle stage.",
+            "impact": "Strategic planning signal: indicates when to stop aggressive expansion and shift budget to quality, compliance, and uptime."
+        }
+    }
+    return guides.get(visual_id, {"title": "Strategic Visual", "what_it_is": "Data visualization", "how_to_read": "Analyze the trends.", "impact": "Operational insight."})
 
 def get_district_risk_scatter(df):
     # 1. Aggregate data at the District level
